@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Gestion Utilisateurs{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              navy: {
+                700: "#1a2a4a",
+                800: "#152238",
+                900: "#0f1825",
+              },
+              primary: {
+                50:  "#e8f0fe",
+                100: "#c5d8fd",
+                500: "#2563eb",
+                600: "#1d4ed8",
+                700: "#1e40af",
+              },
+              accent: {
+                green:  "#16a34a",
+                orange: "#ea580c",
+                red:    "#dc2626",
+              }
+            },
+            boxShadow: {
+              card: "0 2px 12px rgba(0,0,0,0.10)",
+              soft: "0 4px 20px rgba(15,23,42,0.08)",
+            }
+          }
+        }
+      };
+    </script>
+    <style type="text/tailwindcss">
+      @layer components {
+        .form-input {
+          @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100;
+        }
+        .form-select {
+          @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-primary-100;
+        }
+        .nav-link {
+          @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 hover:bg-white/10 hover:text-white transition-colors;
+        }
+        .nav-link.active {
+          @apply bg-primary-600 text-white shadow-md;
+        }
+        .btn-primary {
+          @apply inline-flex items-center gap-2 rounded-lg bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700 shadow-sm;
+        }
+        .btn-danger {
+          @apply inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700;
+        }
+        .btn-success {
+          @apply inline-flex items-center rounded-lg bg-accent-green px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-green-700;
+        }
+        .btn-edit {
+          @apply inline-flex items-center rounded-lg bg-primary-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-primary-700 ml-1;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-slate-100 text-slate-800">
+    <div class="min-h-screen lg:flex">
+
+      {# ── SIDEBAR ── #}
+      <aside class="flex w-64 shrink-0 flex-col bg-navy-800 text-white lg:min-h-screen">
+        {# Logo #}
+        <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
+          <div class="grid h-9 w-9 place-items-center rounded-lg bg-primary-600 shadow">
+            <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path stroke-linecap="round" d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-widest text-slate-400">Système</p>
+            <p class="text-sm font-bold leading-tight text-white">Gestion Utilisateurs</p>
+          </div>
+        </div>
+
+        {# Nav #}
+        <nav class="flex-1 space-y-1 px-3 py-5">
+          <a href="?tab=home" class="nav-link {% if tab == 'home' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7H10v7H4a1 1 0 0 1-1-1z"/>
+            </svg>
+            Tableau de Bord
+          </a>
+          <a href="?tab=register" class="nav-link {% if tab == 'register' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
+            </svg>
+            Enregistrer
+          </a>
+          <a href="?tab=active" class="nav-link {% if tab == 'active' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16 11 2 2 4-4"/>
+            </svg>
+            Utilisateurs actifs
+          </a>
+          <a href="?tab=disabled" class="nav-link {% if tab == 'disabled' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m17 8 5 5M22 8l-5 5"/>
+            </svg>
+            Utilisateurs désactivés
+          </a>
+        </nav>
+
+        {# Déconnexion #}
+        <div class="border-t border-white/10 px-3 py-4">
+          <a href="{% url 'users:logout' %}" class="nav-link text-red-400 hover:bg-red-900/30 hover:text-red-300">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/>
+            </svg>
+            Déconnexion
+          </a>
+        </div>
+      </aside>
+
+      {# ── MAIN ── #}
+      <div class="flex flex-1 flex-col">
+
+        {# Topbar #}
+        <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
+          <h1 class="text-xl font-bold text-navy-800">{% block page_title %}Dashboard{% endblock %}</h1>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5">
+              <div class="grid h-7 w-7 place-items-center rounded-full bg-primary-600 text-xs font-bold text-white">
+                {{ request.user.prenom|first|upper }}{{ request.user.nom|first|upper }}
+              </div>
+              <span class="text-sm font-medium text-slate-700">{{ request.user.prenom }} {{ request.user.nom }}</span>
+              <span class="rounded-full bg-primary-100 px-2 py-0.5 text-xs font-semibold text-primary-700">Administrateur</span>
+            </div>
+            <a href="{% url 'users:logout' %}" class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/>
+              </svg>
+              Déconnexion
+            </a>
+          </div>
+        </header>
+
+        {# Content area #}
+        <main class="flex-1 p-6">
+          {% if messages %}
+            <div class="mb-5 space-y-2" role="status" aria-live="polite">
+              {% for message in messages %}
+                <div class="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium
+                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
+                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
+                  {% else %}border-slate-200 bg-white text-slate-700{% endif %}">
+                  {% if 'success' in message.tags %}
+                    <svg class="h-4 w-4 shrink-0 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/></svg>
+                  {% elif 'error' in message.tags %}
+                    <svg class="h-4 w-4 shrink-0 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/></svg>
+                  {% endif %}
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

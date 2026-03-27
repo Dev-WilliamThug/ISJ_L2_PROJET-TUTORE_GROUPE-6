@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Connexion - Gestion Utilisateurs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              navy: { 800: "#152238", 900: "#0f1825" },
+              primary: { 500: "#2563eb", 600: "#1d4ed8", 700: "#1e40af" }
+            }
+          }
+        }
+      };
+    </script>
+  </head>
+  <body class="min-h-screen bg-slate-100 text-slate-800">
+    <div class="mx-auto grid min-h-screen w-full max-w-6xl items-center px-4 py-8 lg:grid-cols-2 lg:gap-12">
+
+      {# ── Panneau gauche (bleu marine) ── #}
+      <div class="hidden rounded-2xl bg-navy-800 p-10 text-white shadow-2xl lg:block">
+        <div class="mb-6 flex items-center gap-3">
+          <div class="grid h-10 w-10 place-items-center rounded-lg bg-primary-600 shadow">
+            <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path stroke-linecap="round" d="M8 21h8M12 17v4"/>
+            </svg>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Système de Gestion</p>
+        </div>
+
+        <h1 class="mt-2 text-4xl font-bold leading-tight">
+          Gestion des<br/>Utilisateurs
+        </h1>
+        <p class="mt-4 text-sm leading-relaxed text-slate-400">
+          Plateforme sécurisée de gestion des comptes et des accès. Connectez-vous avec votre compte administrateur.
+        </p>
+
+        <div class="mt-8 space-y-3">
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-primary-600/30 text-primary-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
+              </svg>
+            </div>
+            <p class="text-sm text-slate-300">Création et gestion des comptes utilisateurs</p>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-green-600/30 text-green-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/>
+              </svg>
+            </div>
+            <p class="text-sm text-slate-300">Activation / désactivation des accès</p>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-amber-600/30 text-amber-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <p class="text-sm text-slate-300">Mot de passe généré et envoyé par email</p>
+          </div>
+        </div>
+      </div>
+
+      {# ── Formulaire de connexion ── #}
+      <div class="mx-auto w-full max-w-md">
+        <div class="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl">
+          <div class="mb-2 flex items-center gap-2 lg:hidden">
+            <div class="grid h-8 w-8 place-items-center rounded-lg bg-navy-800">
+              <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path stroke-linecap="round" d="M8 21h8M12 17v4"/>
+              </svg>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Gestion Utilisateurs</p>
+          </div>
+
+          <h2 class="text-2xl font-bold text-navy-800">Connexion</h2>
+          <p class="mt-1 text-sm text-slate-500">Accès administrateur uniquement</p>
+
+          {% if messages %}
+            <div class="mt-4 space-y-2" role="status" aria-live="polite">
+              {% for message in messages %}
+                <div class="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium
+                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
+                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
+                  {% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post" class="mt-5 space-y-4" novalidate>
+            {% csrf_token %}
+
+            <div>
+              <label for="id_email" class="mb-1 block text-sm font-semibold text-slate-700">Email</label>
+              <input type="email" name="{{ form.email.name }}" id="id_email"
+                     value="{{ form.email.value|default_if_none:'' }}"
+                     placeholder="admin@example.com"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-100" />
+              {% if form.email.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.email.errors }}</p>{% endif %}
+            </div>
+
+            <div>
+              <label for="id_password" class="mb-1 block text-sm font-semibold text-slate-700">Mot de passe</label>
+              <input type="password" name="{{ form.password.name }}" id="id_password"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-100" />
+              {% if form.password.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.password.errors }}</p>{% endif %}
+            </div>
+
+            <button type="submit"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-800 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-900">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M21 12H9"/>
+              </svg>
+              Se connecter
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
