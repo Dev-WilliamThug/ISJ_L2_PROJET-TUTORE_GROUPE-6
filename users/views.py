@@ -42,9 +42,7 @@ def admin_required(view_func):
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         return redirect("users:dashboard")
-
     form = LoginForm(request.POST or None)
-
     if request.method == "POST":
         if form.is_valid():
             email = form.cleaned_data["email"].lower()
