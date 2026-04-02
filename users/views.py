@@ -16,14 +16,14 @@ from .models import CustomUser
 
 
 def _generate_password(length: int = 12) -> str:
-    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    alphabet = string.ascii_letters + string.digits 
     while True:
         pwd = "".join(secrets.choice(alphabet) for _ in range(length))
         if (
             any(c.isupper() for c in pwd)
             and any(c.islower() for c in pwd)
             and any(c.isdigit() for c in pwd)
-            and any(c in "!@#$%^&*" for c in pwd)
+        
         ):
             return pwd
 
@@ -35,14 +35,7 @@ def admin_required(view_func):
     def _wrapped(request: HttpRequest, *args, **kwargs):
         if not request.user.is_authenticated:
             return redirect("users:login")
-
-        if getattr(request.user, "type_user", None) != CustomUser.TypeUser.ADMIN:
-            messages.error(request, "Accès refusé : uniquement les administrateurs.")
-            logout(request)
-            return redirect("users:login")
-
         return view_func(request, *args, **kwargs)
-
     return _wrapped
 
 
