@@ -6,7 +6,8 @@ from . import views
 app_name = "users"
 
 urlpatterns = [
-    path("", views.dashboard, name="dashboard"),
+    path("", views.module_choice, name="module_choice"),
+    path("admin/dashboard/", views.dashboard, name="dashboard"),
     path("login/", views.login_view, name="login"),
     path("logout/", views.logout_view, name="logout"),
     path("users/<int:user_id>/edit/",       views.edit_user,       name="edit_user"),

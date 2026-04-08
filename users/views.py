@@ -29,6 +29,14 @@ def _generate_password(length: int = 12) -> str:
 
 
 
+def module_choice(request: HttpRequest) -> HttpResponse:
+    if request.user.is_authenticated:
+        if request.user.type_user == CustomUser.TypeUser.ADMIN:
+            return redirect("users:dashboard")
+        return redirect("equipement:dashboard")
+    return render(request, "users/module_choice.html")
+
+
 
 def admin_required(view_func):
     @wraps(view_func)
@@ -41,7 +49,9 @@ def admin_required(view_func):
 
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        return redirect("users:dashboard")
+        if request.user.type_user == CustomUser.TypeUser.ADMIN:
+            return redirect("users:dashboard")
+        return redirect("equipement:dashboard")
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -67,7 +77,7 @@ def login_view(request: HttpRequest) -> HttpResponse:
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     messages.success(request, "Déconnexion effectuée.")
-    return redirect("users:login")
+    return redirect("users:module_choice")
 
 
 @login_required
