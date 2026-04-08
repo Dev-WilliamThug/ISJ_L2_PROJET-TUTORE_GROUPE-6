@@ -1,0 +1,22 @@
+{% extends "truebase.html" %}
+{% block title %}liste du materiel{% endblock  %}
+{% block content %}
+<table>
+<tr>
+    <th>Id</th>
+    <th>couleur</th>
+    <th>marque</th>
+    <th>etat</th>
+</tr>
+{% for p in l  %}
+<tr>
+    <td>{{ p.id }}</td>
+    <td>{{ p.couleur }}</td>
+    <td>{{ p.Marque }}</td>
+    <td>{{ p.etat }}</td>
+</tr>
+
+{% endfor %}
+</table>
+
+{% endblock  %}

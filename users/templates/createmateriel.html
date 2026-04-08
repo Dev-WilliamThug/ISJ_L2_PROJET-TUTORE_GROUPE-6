@@ -1,0 +1,15 @@
+
+{% extends "truebase.html" %}
+{% block title %}
+ajout materiel
+{% endblock  %} 
+{% block content %}
+
+<div class="container mt-4" style="max-width: 500px; margin: auto; background-color: #f8f9fa; padding: 20px; border-radius: 5px;">
+    <form method="POST" class="form">
+        {% csrf_token %}
+        {{f}}
+        <button type="submit" class="btn btn-primary mt-3">ajouter le materiel</button>
+    </form>
+</div>
+{% endblock  %}

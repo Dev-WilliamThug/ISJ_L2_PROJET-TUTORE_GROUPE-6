@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import CustomUser
+from .models import CustomUser, Materiel
 
 
 class LoginForm(forms.Form):
@@ -26,3 +26,7 @@ class EditUserForm(forms.ModelForm):
         widgets = {
             "type_user": forms.Select(choices=CustomUser.TypeUser.choices),
         }
+class formmateriel(forms.ModelForm):
+    class Meta:
+        model = Materiel
+        fields = ["couleur", "Marque"]

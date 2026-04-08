@@ -55,7 +55,7 @@ WSGI_APPLICATION = 'config.wsgi.application'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["ISJ_L2_PROJET-TUTORE_GROUPE-6/users/templates/users"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

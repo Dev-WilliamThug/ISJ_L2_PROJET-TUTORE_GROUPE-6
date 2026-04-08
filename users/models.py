@@ -58,4 +58,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.email:
             self.email = self.email.lower()
         super().save(*args, **kwargs)
+class Materiel(models.Model):
+    couleur=models.CharField(max_length=20)
+    Marque=models.CharField(max_length=20)
+    class State(models.TextChoices):
+          Disponible="disponible",_("disponible")
+          En_pret="En pret",_("En pret")
+          Defectueux="Defectueux",_("Defectueux")
+          Hors_service="Hors service",_("Hors service")
+    etat=models.CharField(max_length=30, choices=State.choices, default=State.Disponible)
+
+
 

@@ -1,6 +1,7 @@
 import secrets
 import string
 from functools import wraps
+from django import forms
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -13,7 +14,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .forms import LoginForm, RegisterUserForm, EditUserForm
 from .models import CustomUser
-
+from .forms import formmateriel
+from .models import Materiel
 
 def _generate_password(length: int = 12) -> str:
     alphabet = string.ascii_letters + string.digits 
@@ -201,3 +203,19 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
 
     messages.success(request, "Utilisateur activé.")
     return redirect(f"{reverse('users:dashboard')}?tab=active")
+
+def creatematerial(request):
+    if request.method=="POST":
+        formulairemateriel=formmateriel(request.POST)
+        if formulairemateriel.is_valid():
+            formulairemateriel.save()
+            return redirect("liste_materiel")
+    else :
+        formulairemateriel=formmateriel(request.POST)
+        return render(request,"createmateriel.html",context={'f':formulairemateriel})
+
+
+def liste_materiel(request):
+    listemateriel=Materiel.objects.all()
+    return render(request,"listemateriel.html",context={'l':listemateriel})
+
