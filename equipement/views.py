@@ -20,6 +20,8 @@ def manager_required(view_func):
 
     return _wrapped
 
+
+
 def module_choice(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
@@ -27,9 +29,11 @@ def module_choice(request: HttpRequest) -> HttpResponse:
         return redirect("equipement:dashboard")
     return render(request, "equipement/module_choice.html")
 
+
+
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        if request.user.type_user == CustomUser.TypeUser.MANAGER:
+        if request.user.type_user == CustomUser.TypeUser:
             return redirect("equipement:dashboard")
         return redirect("users:dashboard")
 
@@ -45,8 +49,6 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
         if not user or (not user.is_active) or (not user.check_password(password)):
             messages.error(request, "Identifiants incorrects.")
-        elif user.type_user != CustomUser.TypeUser.MANAGER:
-            messages.error(request, "Seuls les gestionnaires peuvent se connecter ici.")
         else:
             login(request, user)
             return redirect("equipement:dashboard")
@@ -54,8 +56,8 @@ def login_view(request: HttpRequest) -> HttpResponse:
     return render(request, "equipement/login.html", {"form": form})
 
 
+
 @login_required
-@manager_required
 def dashboard(request: HttpRequest) -> HttpResponse:
     tab = request.GET.get("tab", "home")
     context = {

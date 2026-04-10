@@ -15,6 +15,7 @@ from .forms import LoginForm, RegisterUserForm, EditUserForm
 from .models import CustomUser
 
 
+
 def _generate_password(length: int = 12) -> str:
     alphabet = string.ascii_letters + string.digits 
     while True:
@@ -47,6 +48,7 @@ def admin_required(view_func):
     return _wrapped
 
 
+
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
@@ -74,10 +76,12 @@ def login_view(request: HttpRequest) -> HttpResponse:
     return render(request, "users/login.html", {"form": form})
 
 
+
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     messages.success(request, "Déconnexion effectuée.")
     return redirect("users:module_choice")
+
 
 
 @login_required
@@ -155,6 +159,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     return render(request, "users/dashboard.html", context)
 
 
+
 @login_required
 @admin_required
 def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
@@ -181,6 +186,7 @@ def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return render(request, "users/edit_user.html", {"form": form, "target": target})
 
 
+
 @require_POST
 @login_required
 @admin_required
@@ -197,6 +203,7 @@ def deactivate_user(request: HttpRequest, user_id: int) -> HttpResponse:
 
     messages.success(request, "Utilisateur désactivé.")
     return redirect(f"{reverse('users:dashboard')}?tab=disabled")
+
 
 
 @require_POST
