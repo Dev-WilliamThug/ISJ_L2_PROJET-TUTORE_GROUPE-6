@@ -1,7 +1,7 @@
 from functools import wraps
 
 from django.contrib import messages
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
@@ -29,6 +29,13 @@ def module_choice(request: HttpRequest) -> HttpResponse:
         return redirect("equipement:dashboard")
     return render(request, "equipement/module_choice.html")
 
+
+
+
+def logout_view(request: HttpRequest) -> HttpResponse:
+    logout(request)
+    messages.success(request, "Déconnexion effectuée.")
+    return redirect("users:module_choice")
 
 
 def login_view(request: HttpRequest) -> HttpResponse:

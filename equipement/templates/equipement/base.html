@@ -102,6 +102,12 @@
               <span class="text-sm font-medium text-slate-700">{{ request.user.prenom }} {{ request.user.nom }}</span>
               <span class="rounded-full bg-greenBrand-100 px-2 py-0.5 text-xs font-semibold text-greenBrand-700">Gestionnaire</span>
             </div>
+            <a href="{% url 'equipement:logout' %}" class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/>
+              </svg>
+              Déconnexion
+            </a>
           </div>
         </header>
 
