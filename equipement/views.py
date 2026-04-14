@@ -5,10 +5,11 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import redirect, render
+from django.urls import reverse
 from users.forms import LoginForm
 from users.models import CustomUser
-
-
+from .form import MaterielForm
+from .models import Materiel
 def manager_required(view_func):
     @wraps(view_func)
     def _wrapped(request: HttpRequest, *args, **kwargs):
@@ -66,9 +67,24 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
+
     tab = request.GET.get("tab", "home")
+    form = MaterielForm()
+    if request.method == "POST":
+        if request.POST.get("action") == "register":
+            form = MaterielForm(request.POST or None)
+            if form.is_valid():
+                form.save() 
+                messages.success(request,f"Equipement enregistré avec succès. ")
+                form = MaterielForm()
+            messages.error(request, "Veuillez corriger les erreurs du formulaire.")
+        # Cas GET : on affiche un formulaire vide
+    else:
+    # Liaison pour un affichage simple (formulaire neuf)
+        form = MaterielForm()
     context = {
         "tab": tab,
+        "form": form,
         "stats": {
             "equipements_total": 128,
             "equipements_disponibles": 97,
@@ -83,3 +99,10 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         ],
     }
     return render(request, "equipement/dashboard.html", context)
+
+
+def liste_equipement(request:HttpRequest) ->HttpResponse:
+    materiel = Materiel.objects.all
+    return render (request, "equipement/dashboard.html",{'materiel':materiel} )
+    
+    

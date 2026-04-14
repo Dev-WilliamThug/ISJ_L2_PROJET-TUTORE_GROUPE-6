@@ -11,7 +11,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-emerald-100">Total equipements</p>
-              <p class="mt-1 text-4xl font-bold">{{ stats.equipements_total }}</p>
+              <p class="mt-1 text-4xl font-bold">{{ materiel.length }}</p>
             </div>
             <svg class="h-8 w-8 text-emerald-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4z"/>
@@ -134,36 +134,15 @@
       </div>
       <form class="grid gap-4 sm:grid-cols-2" method="post">
         {% csrf_token %}
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Nom</label>
-          <input class="field" type="text" placeholder="Ex: Ordinateur portable HP" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Couleur</label>
-          <input class="field" type="text" placeholder="Bleu-Noir-Vert" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Etat</label>
-          <select class="field">
-            <option>Disponible</option>
-            <option>En prêt</option>
-            <option>Défectueux</option>
-            <option>En Maintenance</option>
-            <option>Hors service</option>
-          </select>
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Catégorie</label>
-          <select class="field">
-            <option>Visuel</option>
-            <option>Audio</option>
-            <option>Audio-visuel</option>
-          </select>
-        </div>
-        <div class="sm:col-span-2">
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Marque</label>
-          <input class="field" type="text" placeholder="Epson-Lg-Toshiba" />
-        </div>
+        <input type="hidden" name="action" value="register" />
+        {%for field in form%}
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">{{field.label}}</label>
+            {{field}}
+            {% if form.field.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.field.errors }}</p>{% endif %}
+          </div>
+          {% endfor %}
+
         <div class="sm:col-span-2 flex items-center gap-3 pt-2">
           <button class="btn-primary" type="submit">Enregistrer l'equipement</button>
           <a class="text-sm font-medium text-slate-500 hover:text-slate-700" href="?tab=home">Annuler</a>
