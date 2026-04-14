@@ -70,6 +70,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     tab = request.GET.get("tab", "home")
     form = MaterielForm()
+
+    materiels = Materiel.objects.all();
     if request.method == "POST":
         if request.POST.get("action") == "register":
             form = MaterielForm(request.POST or None)
@@ -85,6 +87,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     context = {
         "tab": tab,
         "form": form,
+        "materiels" : materiels,
         "stats": {
             "equipements_total": 128,
             "equipements_disponibles": 97,
@@ -100,9 +103,3 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     }
     return render(request, "equipement/dashboard.html", context)
 
-
-def liste_equipement(request:HttpRequest) ->HttpResponse:
-    materiel = Materiel.objects.all
-    return render (request, "equipement/dashboard.html",{'materiel':materiel} )
-    
-    
