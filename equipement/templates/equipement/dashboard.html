@@ -6,146 +6,45 @@
 {% block content %}
   {% if tab == 'home' %}
     <section class="space-y-6">
-      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="grid gap-4 sm:grid-cols-2">
         <article class="rounded-xl bg-greenBrand-600 p-5 text-white shadow-soft">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-emerald-100">Total equipements</p>
-              <p class="mt-1 text-4xl font-bold">{{materiel | length }}</p>
-            </div>
-            <svg class="h-8 w-8 text-emerald-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l9 4 9-4"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9 4 9-4"/>
-            </svg>
-          </div>
+          <p class="text-sm font-medium text-emerald-100">Total equipements</p>
+          <p class="mt-1 text-4xl font-bold">{{ materiels|length }}</p>
         </article>
-
         <article class="rounded-xl border border-emerald-100 bg-white p-5 shadow-soft">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-500">Disponibles</p>
-              <p class="mt-1 text-4xl font-bold text-greenBrand-700">{{ stats.equipements_disponibles }}</p>
-            </div>
-            <svg class="h-8 w-8 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/>
-            </svg>
-          </div>
-        </article>
-
-        <article class="rounded-xl border border-amber-100 bg-white p-5 shadow-soft">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-500">Emprunts en cours</p>
-              <p class="mt-1 text-4xl font-bold text-amber-600">{{ stats.emprunts_en_cours }}</p>
-            </div>
-            <svg class="h-8 w-8 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
-            </svg>
-          </div>
-        </article>
-
-        <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-slate-500">Retours prevus</p>
-              <p class="mt-1 text-4xl font-bold text-slate-700">{{ stats.retours_prevus }}</p>
-            </div>
-            <svg class="h-8 w-8 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 3v5h5"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 21v-5h-5"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 8A9 9 0 0 0 6.7 5.3L3 8"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16a9 9 0 0 0 14.3 2.7L21 16"/>
-            </svg>
-          </div>
+          <p class="text-sm font-medium text-slate-500">Disponibles</p>
+          <p class="mt-1 text-4xl font-bold text-greenBrand-700">{{ materiels_disponibles|length }}</p>
         </article>
       </div>
-
-      <div class="grid gap-6 lg:grid-cols-3">
-        <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft lg:col-span-2">
-          <div class="mb-4 flex items-center justify-between">
-            <h2 class="text-lg font-bold text-slate-800">Equipements recents</h2>
-            <a href="?tab=list" class="text-sm font-semibold text-greenBrand-700 hover:underline">Tout afficher</a>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-100">
-              <thead class="bg-slate-50">
-                <tr>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Code</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Nom</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Etat</th>
-                  <th class="px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">Actions</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100 bg-white">
-                {% for equipement in recent_equipements %}
-                  <tr class="transition hover:bg-slate-50">
-                    <td class="px-4 py-3 text-sm font-semibold text-slate-700">{{ equipement.code }}</td>
-                    <td class="px-4 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
-                    <td class="px-4 py-3 text-sm">
-                      {% if equipement.etat == 'Disponible' %}
-                        <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-700">Disponible</span>
-                      {% elif equipement.etat == 'Emprunte' %}
-                        <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">Emprunte</span>
-                      {% else %}
-                        <span class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-bold text-rose-700">Maintenance</span>
-                      {% endif %}
-                    </td>
-                    <td class="px-4 py-3">
-                      <div class="flex items-center gap-2">
-                        <a href="?tab=detail" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
-                        <a href="?tab=edit" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
-                      </div>
-                    </td>
-                  </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <section class="rounded-xl border border-emerald-100 bg-white p-6 shadow-soft">
-          <h2 class="text-lg font-bold text-slate-800">Actions rapides</h2>
-          <div class="mt-4 space-y-3">
-            <a href="?tab=add" class="btn-primary w-full justify-center">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
-              Ajouter un equipement
-            </a>
-            <a href="?tab=list" class="btn-secondary w-full justify-center">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
-              Voir les equipements
-            </a>
-            <a href="?tab=import" class="btn-secondary w-full justify-center">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/></svg>
-              Importer fichier Excel
-            </a>
-          </div>
-        </section>
-      </div>
+      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-bold text-slate-800">Actions rapides</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <a href="?tab=add" class="btn-primary justify-center">Ajouter equipement</a>
+          <a href="?tab=list" class="btn-secondary justify-center">Lister equipements</a>
+          <a href="?tab=register" class="btn-secondary justify-center">Ajouter emprunteur</a>
+          <a href="?tab=lister_emprunteurs" class="btn-secondary justify-center">Lister emprunteurs</a>
+          <a href="?tab=import" class="btn-secondary justify-center sm:col-span-2">Importer Excel</a>
+        </div>
+      </section>
     </section>
   {% endif %}
 
   {% if tab == 'add' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-      <div class="mb-5 border-b border-slate-100 pb-4">
-        <h2 class="text-lg font-bold text-slate-800">Ajouter un equipement</h2>
-        <p class="mt-1 text-sm text-slate-500">Renseignez les informations essentielles pour enregistrer un nouvel equipement.</p>
-      </div>
+      <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un equipement</h2>
       <form class="grid gap-4 sm:grid-cols-2" method="post">
         {% csrf_token %}
-        <input type="hidden" name="action" value="register" />
-        {%for field in form%}
-          <div>
-            <label class="mb-1 block text-sm font-semibold text-slate-700">{{field.label}}</label>
-            {{field}}
-            {% if form.field.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.field.errors }}</p>{% endif %}
+        <input type="hidden" name="action" value="register_materiel" />
+        {% for field in form %}
+          <div class="{% if field.name == 'id_materiel' %}sm:col-span-2{% endif %}">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
           </div>
-          {% endfor %}
-
-        <div class="sm:col-span-2 flex items-center gap-3 pt-2">
+        {% endfor %}
+        <div class="sm:col-span-2">
           <button class="btn-primary" type="submit">Enregistrer l'equipement</button>
-          <a class="text-sm font-medium text-slate-500 hover:text-slate-700" href="?tab=home">Annuler</a>
         </div>
       </form>
     </section>
@@ -155,7 +54,10 @@
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des equipements</h2>
-        <a href="?tab=add" class="btn-primary">Ajouter</a>
+        <div class="flex gap-2">
+          <a href="?tab=add" class="btn-primary">Ajouter</a>
+          <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
@@ -167,23 +69,26 @@
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
             </tr>
           </thead>
-          {%if materiels %}
-            <tbody class="divide-y divide-slate-100">
-              {% for equipement in materiels %}
-                <tr class="hover:bg-slate-50">
-                  <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
-                  <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
-                  <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.etat }}</td>
-                  <td class="px-5 py-3">
-                    <div class="flex items-center gap-2">
-                      <a href="?tab=detail" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
-                      <a href="?tab=edit" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
-                      <button class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Retirer</button>
-                    </div>
-                  </td>
-                </tr>
-              {% endfor %}
-          {% endif %}
+          <tbody class="divide-y divide-slate-100">
+            {% for equipement in materiels %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}</td>
+                <td class="px-5 py-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'equipement:detail_materiel' equipement.id_materiel %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
+                    <a href="{% url 'equipement:dashboard' %}?tab=editMateriel&materiel_id={{ equipement.id_materiel }}" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
+                    <form method="post" action="{% url 'equipement:retirer_materiel' equipement.id_materiel %}">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('Confirmer la suppression de cet equipement ?');" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">Aucun equipement enregistre.</td></tr>
+            {% endfor %}
           </tbody>
         </table>
       </div>
@@ -193,55 +98,121 @@
   {% if tab == 'detail' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Details de l'equipement</h2>
-      <div class="mt-4 grid gap-4 sm:grid-cols-2">
-        <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Code</p><p class="mt-1 font-semibold text-slate-800">EQ-001</p></div>
-        <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Etat</p><p class="mt-1 font-semibold text-emerald-700">Disponible</p></div>
-        <div class="rounded-lg border border-slate-200 p-4 sm:col-span-2"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">Ordinateur Dell Latitude 7440</p></div>
-        <div class="rounded-lg border border-slate-200 p-4 sm:col-span-2"><p class="text-xs uppercase text-slate-500">Description</p><p class="mt-1 text-sm text-slate-700">Equipement pour les presentations et travaux de bureautique.</p></div>
-      </div>
+      {% if materiel_detail %}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Code</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.id_materiel }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Etat</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.get_etat_display }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.nom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Categorie</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.categorie }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Couleur</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.couleur }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Marque</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.marque }}</p></div>
+        </div>
+      {% else %}
+        <p class="mt-4 text-sm text-slate-500">Aucun equipement selectionne.</p>
+      {% endif %}
     </section>
   {% endif %}
 
-  {% if tab == 'edit' %}
+  {%if tab == 'editMateriel' %}
+    {% include "equipement/edit_equipement.html" %}
+  {% endif %}
+
+  {% if tab == 'register' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-      <h2 class="text-lg font-bold text-slate-800">Modifier un equipement</h2>
-      <form class="mt-4 grid gap-4 sm:grid-cols-2" method="post">
+      <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un emprunteur</h2>
+      <form class="grid gap-4 sm:grid-cols-2" method="post">
         {% csrf_token %}
+        <input type="hidden" name="action" value="register_emprunteur" />
+        {% for field in f %}
+          <div class="{% if field.name == 'id_Tierce' or field.name == 'email' %}sm:col-span-2{% endif %}">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
         <div class="sm:col-span-2">
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Nom</label>
-          <input class="field" type="text" value="Ordinateur Dell Latitude 7440" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Categorie</label>
-          <input class="field" type="text" value="Informatique" />
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">Etat</label>
-          <select class="field"><option>Disponible</option><option>Emprunte</option><option>Maintenance</option></select>
-        </div>
-        <div class="sm:col-span-2 flex items-center gap-3 pt-2">
-          <button class="btn-primary" type="submit">Sauvegarder</button>
-          <a class="text-sm font-medium text-slate-500 hover:text-slate-700" href="?tab=list">Annuler</a>
+          <button class="btn-primary" type="submit">Enregistrer l'emprunteur</button>
         </div>
       </form>
     </section>
   {% endif %}
 
+  {% if tab == 'lister_emprunteurs' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-slate-800">Liste des emprunteurs</h2>
+        <a href="?tab=register" class="btn-primary">Ajouter</a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">ID</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Prenom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Email</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Type</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for emprunteur in emprunteurs %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ emprunteur.id_Tierce }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.prenom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.email }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.type_Tierce }}</td>
+                <td class="px-5 py-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'equipement:detail_emprunteur' emprunteur.id_Tierce %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
+                    <a href="{% url 'equipement:dashboard'%}?tab=editEmprunteur&emprunteur_id={{ emprunteur.id_Tierce }}" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
+                    <form method="post" action="{% url 'equipement:retirer_emprunteur' emprunteur.id_Tierce %}">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('Confirmer la suppression de cet emprunteur ?');" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunteur enregistre.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+
+  {% if tab == 'detail_emprunteur' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Details de l'emprunteur</h2>
+      {% if emprunteur_detail %}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">ID</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.id_Tierce }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Type</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.type_Tierce }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.nom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Prenom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.prenom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4 sm:col-span-2"><p class="text-xs uppercase text-slate-500">Email</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.email }}</p></div>
+        </div>
+      {% else %}
+        <p class="mt-4 text-sm text-slate-500">Aucun emprunteur selectionne.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {%if tab == 'editEmprunteur' %}
+    {% include "equipement/edit_emprunteur.html" %}
+  {% endif %}
+
   {% if tab == 'import' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>
-      <p class="mt-1 text-sm text-slate-500">Selectionnez un fichier au format `.xlsx` pour importer en masse les equipements.</p>
-      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data">
+      <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel, nom, couleur, categorie, etat, marque.</p>
+      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_materiels' %}">
         {% csrf_token %}
-        <label class="block rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50 p-8 text-center">
-          <svg class="mx-auto h-10 w-10 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="17 8 12 3 7 8"/>
-            <line x1="12" y1="3" x2="12" y2="15"/>
-          </svg>
-          <span class="mt-2 block text-sm font-semibold text-emerald-700">Cliquez pour choisir votre fichier Excel</span>
-          <input class="hidden" type="file" accept=".xlsx,.xls" />
-        </label>
+        <input class="field" type="file" name="file" accept=".xlsx" required />
         <button type="submit" class="btn-primary">Importer maintenant</button>
       </form>
     </section>

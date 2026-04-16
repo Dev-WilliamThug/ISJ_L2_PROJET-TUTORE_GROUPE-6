@@ -59,3 +59,5 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             self.email = self.email.lower()
         super().save(*args, **kwargs)
 
+
+
