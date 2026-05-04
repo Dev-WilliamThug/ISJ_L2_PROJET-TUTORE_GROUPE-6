@@ -71,7 +71,6 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
 
 
-@login_required
 def dashboard(request: HttpRequest) -> HttpResponse:
     tab = request.GET.get("tab", "home")
     form = MaterielForm()
@@ -169,52 +168,32 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     return render(request, "equipement/dashboard.html", context)
 
 
-
-
-
 def exporter_excel(request):
     wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Materiel"
+    ws.title = "Materiels"
 
-  
-    header_font = Font(bold=True, color="FFFFFF")
-    header_fill = PatternFill(start_color="4F81BD", end_color="4F81BD", fill_type="solid")
-
-
-    ws.append([])
-    ws.append(["Exporté le :", datetime.now().strftime("%d/%m/%Y %H:%M")])
-
-  
-    headers = ['nom', 'id_materiel', 'etat', 'couleur', 'marque']
+    # ✅ Format officiel (IMPORTANT)
+    headers = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque']
     ws.append(headers)
 
-    for cell in ws[3]:
-        cell.font = header_font
-        cell.fill = header_fill
-
-    ws.column_dimensions['A'].width = 20
-    ws.column_dimensions['B'].width = 20
-    ws.column_dimensions['C'].width = 20
-    ws.column_dimensions['D'].width = 20
-    ws.column_dimensions['E'].width = 20
-
-    for materiel in Materiel.objects.all():
+    # Données
+    for m in Materiel.objects.all():
         ws.append([
-            materiel.nom,
-            materiel.id_materiel,
-            materiel.get_etat_display(),
-            materiel.couleur,
-            materiel.marque
+            str(m.id_materiel),
+            m.nom or "",
+            m.couleur or "",
+            m.categorie or "",
+            m.etat or "",
+            m.marque or "",
         ])
 
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
-    response['Content-Disposition'] = 'attachment; filename=logiciel.xlsx'
+    response['Content-Disposition'] = 'attachment; filename=materiels.xlsx'
 
     wb.save(response)
-
     return response
 
 
@@ -228,60 +207,76 @@ def retirer_materiel(request, materiel_id):
     messages.success(request, f"Equipement {nom} retire avec succes.")
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
-
 def import_materiels(request):
     if request.method != "POST":
         return redirect(f"{reverse('equipement:dashboard')}?tab=import")
 
     fichier = request.FILES.get("file")
+
     if not fichier:
-        messages.error(request, "Veuillez selectionner un fichier.")
+        messages.error(request, "Veuillez sélectionner un fichier.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+
     if not fichier.name.endswith(".xlsx"):
-        messages.error(request, "Le fichier doit etre au format .xlsx.")
+        messages.error(request, "Fichier invalide (.xlsx requis).")
         return redirect(f"{reverse('equipement:dashboard')}?tab=import")
 
     try:
         wb = openpyxl.load_workbook(fichier)
         ws = wb.active
-    except Exception:
-        messages.error(request, "Impossible de lire le fichier Excel.")
+    except Exception as e:
+        messages.error(request, f"Erreur lecture fichier : {e}")
         return redirect(f"{reverse('equipement:dashboard')}?tab=import")
 
     importes = 0
     ignores = 0
+
+    valeurs_valides = [c[0] for c in Materiel.ETAT_CHOICES]
+
     for row in ws.iter_rows(min_row=2, values_only=True):
-        if not row or len(row) < 6:
+
+        if not row:
+            ignores += 1
+            continue
+
+        # Nettoyage
+        row = [str(cell).strip() if cell else "" for cell in row]
+
+        if len(row) < 6:
             ignores += 1
             continue
 
         id_materiel, nom, couleur, categorie, etat, marque = row[:6]
+
         if not id_materiel or not nom:
             ignores += 1
             continue
 
-        valeurs_valides = [choix[0] for choix in Materiel.ETAT_CHOICES]
-        etat_valeur = etat if etat in valeurs_valides else "DISPONIBLE"
+        # Normalisation état
+        etat = etat.upper()
+        if etat not in valeurs_valides:
+            etat = "DISPONIBLE"
 
-        obj, created = Materiel.objects.update_or_create(
+        # Sauvegarde
+        Materiel.objects.update_or_create(
             id_materiel=id_materiel,
             defaults={
                 "nom": nom,
-                "couleur": couleur or "",
-                "categorie": categorie or "",
-                "etat": etat_valeur,
-                "marque": marque or "",
-            },
+                "couleur": couleur,
+                "categorie": categorie,
+                "etat": etat,
+                "marque": marque,
+            }
         )
-        if obj:
-            importes += 1
-        else:
-            ignores += 1
 
-    messages.success(request, f"Import termine : {importes} ligne(s) traitee(s), {ignores} ignoree(s).")
+        importes += 1
+
+    messages.success(
+        request,
+        f"Import terminé : {importes} lignes traitées, {ignores} ignorées."
+    )
+
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
-
-
 def detail_materiel(request, materiel_id):
     get_object_or_404(Materiel, id_materiel=materiel_id)
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
