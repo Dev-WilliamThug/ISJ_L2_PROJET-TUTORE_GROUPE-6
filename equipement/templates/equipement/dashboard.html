@@ -35,6 +35,7 @@
       <form class="grid gap-4 sm:grid-cols-2" method="post">
         {% csrf_token %}
         <input type="hidden" name="action" value="register_materiel" />
+        {% for field in formMateriel %}
           <div class="{% if field.name == 'id_materiel' %}sm:col-span-2{% endif %}">
             <label class="mb-1 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
             {{ field }}

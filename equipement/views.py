@@ -38,19 +38,11 @@ def module_choice(request: HttpRequest) -> HttpResponse:
 
 
 
-
-def logout_view(request: HttpRequest) -> HttpResponse:
-    logout(request)
-    messages.success(request, "Déconnexion effectuée.")
-    return redirect("users:module_choice")
-
-
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.MANAGER:
             return redirect("equipement:dashboard")
         return redirect("users:dashboard")
-
     form = LoginForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
         email = form.cleaned_data["email"].lower()
