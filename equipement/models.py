@@ -25,17 +25,29 @@ class Materiel(models.Model):
     )
     marque = models.CharField(max_length=50)
 
+    def est_disponible(self) -> bool:
+        return self.etat == "DISPONIBLE"
+
+    def mettre_en_pret(self) -> None:
+        if not self.est_disponible():
+            raise ValueError(f"Le matériel {self.nom} n'est pas disponible.")
+        self.etat = "EN PRET"
+        self.save()
+
+    def retourner(self) -> None:
+        self.etat = "DISPONIBLE"
+        self.save()
+
     def __str__(self):
         return f"{self.nom} ({self.id_materiel})"
 
 
 class Tierce(models.Model):
+    
     class TypeTierce(models.TextChoices):
         ETUDIANT = "etudiant", _("etudiant")
         PROFESSEUR = "professeur", _("professeur")
 
-    # Le champ Python reste "id_Tierce" pour compatibilite avec le code existant,
-    # mais la colonne SQL est "id_tierce" (cree par la migration 0003).
     id_Tierce = models.CharField(
         max_length=50,
         primary_key=True,
@@ -51,7 +63,16 @@ class Tierce(models.Model):
         default=TypeTierce.ETUDIANT,
         verbose_name="Type",
     )
+    def get_full_name(self) -> str:
+        return f"{self.prenom} {self.nom}".strip()
+
+    def est_etudiant(self) -> bool:
+        return self.type_Tierce == self.TypeTierce.ETUDIANT
+
+    @property
+    def nb_emprunts_en_cours(self) -> int:
+        return self.emprunts.filter(statut="EN_COURS").count()
 
     def __str__(self):
-        return self.nom
+        return self.get_full_name()
 

@@ -70,102 +70,153 @@ def login_view(request: HttpRequest) -> HttpResponse:
     return render(request, "equipement/login.html", {"form": form})
 
 
+def logout_view(request: HttpRequest) -> HttpResponse:
+    logout(request)
+    messages.success(request, "Déconnexion effectuée.")
+    return redirect("users:module_choice")
+
+
+def register_materiel(request:HttpRequest,form:MaterielForm) -> HttpResponse:
+    if request.method != "POST":
+        messages.error(request, "Action non autorisee.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=add")
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Equipement enregistre avec succes.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+    messages.error(request, "Veuillez corriger les erreurs du formulaire equipement.")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=add")
+    
+
+@login_required
+def edit_equipement(request: HttpRequest, materiel_id: str) -> HttpResponse:
+    materiel = get_object_or_404(Materiel, pk=materiel_id)
+
+    if request.method == "POST":
+        form = EditMaterielForm(request.POST, instance=materiel)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Equipement {materiel.nom} modifié avec succès.")
+            return redirect(
+                f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}"
+            )
+        messages.error(request, "Veuillez corriger les erreurs du formulaire.")
+    else:
+        form = EditMaterielForm(instance=materiel)
+
+    return render(request, "equipement/edit_equipement.html", {
+        "form": form,
+        "materiel": materiel,
+    })
+
+
+def register_emprunteur(request: HttpRequest, form: EnregistrerEmprunteurForm) -> HttpResponse:
+    if request.method != "POST":
+        messages.error(request, "Action non autorisee.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=register")
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Emprunteur enregistre avec succes.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
+    messages.error(request, "Veuillez corriger les erreurs du formulaire emprunteur.")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=register")
+
+
+@login_required
+def edit_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
+    emprunteur = get_object_or_404(Tierce, pk=emprunteur_id)
+
+    if request.method == "POST":
+        form = EditEmprunteurForm(request.POST, instance=emprunteur)
+        if form.is_valid():
+            form.save()
+            messages.success(request, f"Emprunteur {emprunteur.prenom} {emprunteur.nom} modifié avec succès.")
+            return redirect(
+                f"{reverse('equipement:dashboard')}?tab=detail_emprunteur&emprunteur_id={emprunteur_id}"
+            )
+        messages.error(request, "Veuillez corriger les erreurs du formulaire.")
+    else:
+        form = EditEmprunteurForm(instance=emprunteur)
+
+    return render(request, "equipement/edit_emprunteur.html", {
+        "form": form,
+        "emprunteur": emprunteur,
+    })
+
+
 
 def dashboard(request: HttpRequest) -> HttpResponse:
-    tab = request.GET.get("tab", "home")
-    form = MaterielForm()
-    f = EnregistrerEmprunteurForm()
-    editMaterielForm = None
-    editEmprunteurForm = None
+    tab = request.GET.get("tab", "home") #Si tab a déjà une valeur on la recupère sinon on fixe la valeur par defaut à home
+
+    editFormMateriel = EditMaterielForm()
+    editFormEmprunteur = EditEmprunteurForm()
+    formMateriel = MaterielForm()
+    formEmprunteur= EnregistrerEmprunteurForm()
+
+    action = request.POST.get("action")
     target = None
+
     materiel_detail = None
     emprunteur_detail = None
+    
     emprunteurs = Tierce.objects.all()
-
     materiels = Materiel.objects.all()
+
     materiels_recents = materiels.order_by("-id_materiel")[:5]
     materiels_disponibles = materiels.filter(etat="DISPONIBLE")
 
-   
+    if request.method == "POST":
+
+        if action == "register_materiel":
+            formMateriel = MaterielForm(request.POST)
+            register_materiel(request, formMateriel)
+
+        if action == "register_emprunteur":
+            formEmprunteur = EnregistrerEmprunteurForm(request.POST)
+            register_emprunteur(request, formEmprunteur())
+            
+
     if tab == "detail" and request.GET.get("materiel_id"):
         materiel_detail = get_object_or_404(Materiel, pk=request.GET.get("materiel_id"))
     if tab == "detail_emprunteur" and request.GET.get("emprunteur_id"):
         emprunteur_detail = get_object_or_404(Tierce, pk=request.GET.get("emprunteur_id"))
-
-    if tab == "editMateriel" and request.GET.get("materiel_id"):
-        target = get_object_or_404(Materiel, id_materiel=request.GET.get("materiel_id"))
-
-        if request.method == "POST":
-            action = request.POST.get("action")
-
-            if action == "edit_materiel":
-                editMaterielForm = EditMaterielForm(request.POST, instance=target)
-
-                if editMaterielForm.is_valid():
-                    editMaterielForm.save()
-                    messages.success(request, "Modification effectuée avec succès.")
-                    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
-
-                messages.error(request, "Veuillez corriger les erreurs.")
-        
-        else:
-            editMaterielForm = EditMaterielForm(instance=target)
-
-    if tab == "editEmprunteur" and request.GET.get("emprunteur_id"):
-        target = get_object_or_404(Tierce, id_Tierce=request.GET.get("emprunteur_id"))
-
-        if request.method == "POST":
-            action = request.POST.get("action")
-
-            if action == "edit_emprunteur":
-                editEmprunteurForm = EditEmprunteurForm(request.POST, instance=target)
-
-                if editEmprunteurForm.is_valid():
-                    editEmprunteurForm.save()
-                    messages.success(request, "Modification effectuée avec succès.")
-                    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
-
-                messages.error(request, "Veuillez corriger les erreurs.")
-        
-        else:
-            editEmprunteurForm = EditEmprunteurForm(instance=target)      
-
-
-    if request.method == "POST":
-        action = request.POST.get("action")
-        if action == "register_materiel":
-            form = MaterielForm(request.POST or None)
-            if form.is_valid():
-                form.save()
-                messages.success(request, "Equipement enregistre avec succes.")
-                return redirect(f"{reverse('equipement:dashboard')}?tab=list")
-            messages.error(request, "Veuillez corriger les erreurs du formulaire equipement.")
-            tab = "add"
-
-        if action == "register_emprunteur":
-            f = EnregistrerEmprunteurForm(request.POST)
-            if f.is_valid():
-                f.save()
-                messages.success(request, "Emprunteur enregistre avec succes.")
-                return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
-            messages.error(request, "Veuillez corriger les erreurs du formulaire emprunteur.")
-            tab = "register"
-
+   
+ 
     context = {
         "tab": tab,
         "target": target,
-        "form": form,
+        "formMateriel":formMateriel,
+        "formEmprunteur": formEmprunteur,
         "materiels": materiels,
         "materiels_recents": materiels_recents,
         "materiels_disponibles": materiels_disponibles,
         "materiel_detail": materiel_detail,
-        "editMaterielForm": editMaterielForm,
-        "editEmprunteurForm": editEmprunteurForm,
+        "editMaterielForm": editFormMateriel,
+        "editEmprunteurForm": editFormEmprunteur,
         "emprunteur_detail": emprunteur_detail,
-        "f": f,
         "emprunteurs": emprunteurs,
     }
     return render(request, "equipement/dashboard.html", context)
+
+
+
+
+def detail_materiel(request, materiel_id):
+    get_object_or_404(Materiel, id_materiel=materiel_id)
+    return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
+
+
+def retirer_materiel(request, materiel_id):
+    if request.method != "POST":
+        messages.error(request, "Action non autorisee.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+    materiel = get_object_or_404(Materiel, id_materiel=materiel_id)
+    nom = materiel.nom
+    materiel.delete()
+    messages.success(request, f"Equipement {nom} retire avec succes.")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+
+
 
 
 def exporter_excel(request):
@@ -197,15 +248,6 @@ def exporter_excel(request):
     return response
 
 
-def retirer_materiel(request, materiel_id):
-    if request.method != "POST":
-        messages.error(request, "Action non autorisee.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=list")
-    materiel = get_object_or_404(Materiel, id_materiel=materiel_id)
-    nom = materiel.nom
-    materiel.delete()
-    messages.success(request, f"Equipement {nom} retire avec succes.")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 def import_materiels(request):
     if request.method != "POST":
@@ -277,30 +319,18 @@ def import_materiels(request):
     )
 
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+
+
 def detail_materiel(request, materiel_id):
     get_object_or_404(Materiel, id_materiel=materiel_id)
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
+
 
 
 def detail_emprunteur(request, emprunteur_id):
     get_object_or_404(Tierce, id_Tierce=emprunteur_id)
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail_emprunteur&emprunteur_id={emprunteur_id}")
 
-
-def edit_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
-    target = get_object_or_404(Tierce, id_Tierce=emprunteur_id)
-
-    if request.method == "POST":
-        form = EditEmprunteurForm(request.POST, instance=target)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Emprunteur modifie avec succes.")
-            return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
-        messages.error(request, "Veuillez corriger les erreurs du formulaire emprunteur.")
-    else:
-        form = EditEmprunteurForm(instance=target)
-
-    return render(request, "equipement/edit_emprunteur.html", {"form": form, "target": target})
 
 
 def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:

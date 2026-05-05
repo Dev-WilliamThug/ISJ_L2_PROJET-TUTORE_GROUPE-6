@@ -3,11 +3,8 @@ from django import forms
 from .models import Materiel, Tierce
 
 
-def _next_prefixed_id(last_value: str | None, prefix: str, fallback_count: int) -> str:
-    """
-    Construit un ID du type PREFIX-001 en évitant les erreurs
-    si l'ancien format ne contient pas de '-'.
-    """
+def _next_prefixed_id(last_value: str | None, prefix: str, fallback_count: int) -> str: 
+
     if not last_value:
         return f"{prefix}-001"
 
@@ -25,7 +22,7 @@ class MaterielForm(forms.ModelForm):
             field.widget.attrs["class"] = "field"
             field.widget.attrs["placeholder"] = f"Saisir {field.label.lower()}"
         
-        # Calcul du prochain ID (EQ-00X), robuste meme si ancien format invalide.
+        
         dernier_materiel = Materiel.objects.order_by('id_materiel').last()
         nouvel_id = _next_prefixed_id(
             dernier_materiel.id_materiel if dernier_materiel else None,
@@ -33,7 +30,7 @@ class MaterielForm(forms.ModelForm):
             Materiel.objects.count(),
         )
 
-        # Pre-remplissage et lecture seule de l'ID.
+        
         self.fields['id_materiel'].initial = nouvel_id
         self.fields['id_materiel'].widget.attrs['readonly'] = True
         self.fields["id_materiel"].help_text = "ID genere automatiquement."
@@ -46,6 +43,7 @@ class MaterielForm(forms.ModelForm):
 
 
 class EditMaterielForm(forms.ModelForm):
+    
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
@@ -57,6 +55,8 @@ class EditMaterielForm(forms.ModelForm):
     class Meta:
         model = Materiel
         fields = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque']
+
+
 class EnregistrerEmprunteurForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
