@@ -98,7 +98,7 @@
               <circle cx="8.5" cy="7" r="4"/>
               <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
             </svg>
-            Enregistrer
+            Enregistrer un utilisateur
           </a>
           <a href="?tab=active" class="nav-link {% if tab == 'active' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -115,6 +115,14 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="m17 8 5 5M22 8l-5 5"/>
             </svg>
             Utilisateurs désactivés
+          </a>
+          <a href="?tab=" class="nav-link {% if tab == '' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16 11 2 2 4-4"/>
+            </svg>
+            Liste d'emprunts
           </a>
         </nav>
 
