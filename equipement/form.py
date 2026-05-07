@@ -94,3 +94,55 @@ class EditEmprunteurForm(forms.ModelForm):
     class Meta:
         model = Tierce
         fields = ["id_Tierce", "nom", "prenom", "email", "type_Tierce"]
+
+
+class EmpruntForm(forms.Form):
+    """Formulaire de création d'un emprunt multi-équipements."""
+
+    materiels = forms.ModelMultipleChoiceField(
+        queryset=Materiel.objects.filter(etat="DISPONIBLE"),
+        widget=forms.CheckboxSelectMultiple,
+        label="Équipements",
+        error_messages={"required": "Sélectionnez au moins un équipement."},
+    )
+    emprunteur = forms.ModelChoiceField(
+        queryset=Tierce.objects.all(),
+        widget=forms.Select(attrs={"class": "field"}),
+        label="Emprunteur",
+        empty_label="— Choisir un emprunteur —",
+    )
+    date_emprunt = forms.DateTimeField(
+        widget=forms.DateTimeInput(
+            attrs={"class": "field", "type": "datetime-local"},
+            format="%Y-%m-%dT%H:%M",
+        ),
+        input_formats=["%Y-%m-%dT%H:%M"],
+        label="Date d'emprunt",
+    )
+    date_retour_prevue = forms.DateField(
+        widget=forms.DateInput(attrs={"class": "field", "type": "date"}),
+        label="Retour prévu",
+    )
+    notes = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"class": "field resize-none", "rows": 3}),
+        label="Notes",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.utils import timezone
+        now = timezone.localtime(timezone.now())
+        self.fields["date_emprunt"].initial = now.strftime("%Y-%m-%dT%H:%M")
+
+    def clean(self):
+        cleaned = super().clean()
+        date_emprunt = cleaned.get("date_emprunt")
+        date_retour = cleaned.get("date_retour_prevue")
+        if date_emprunt and date_retour:
+            if date_retour < date_emprunt.date():
+                self.add_error(
+                    "date_retour_prevue",
+                    "La date de retour ne peut pas être antérieure à la date d'emprunt.",
+                )
+        return cleaned

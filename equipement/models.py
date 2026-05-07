@@ -108,3 +108,25 @@ class Emprunt(models.Model):
 
     def __str__(self):
         return f"{self.materiel} → {self.emprunteur} ({self.statut})"
+
+
+class LigneEmprunt(models.Model):
+    """Un enregistrement par matériel dans un emprunt."""
+    emprunt = models.ForeignKey(
+        Emprunt,
+        on_delete=models.CASCADE,
+        related_name="lignes",
+        verbose_name="Emprunt",
+    )
+    materiel = models.ForeignKey(
+        Materiel,
+        on_delete=models.PROTECT,
+        related_name="lignes_emprunt",
+        verbose_name="Matériel",
+    )
+
+    class Meta:
+        unique_together = ("emprunt", "materiel")
+
+    def __str__(self):
+         return f"{self.materiel} dans Emprunt #{self.emprunt_id}"

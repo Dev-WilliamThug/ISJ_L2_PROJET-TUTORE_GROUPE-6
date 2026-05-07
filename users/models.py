@@ -2,7 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from equipement.models import Materiel,Tierce
+from equipement.models import Materiel,Tierce,Emprunt
 
 
 class CustomUserManager(BaseUserManager):
@@ -60,36 +60,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
             self.email = self.email.lower()
         super().save(*args, **kwargs)
 
-
-class Emprunt(models.Model):
-
-    class Statut(models.TextChoices):
-        EN_COURS = "EN_COURS", _("En cours")
-        RETOURNE = "RETOURNE", _("Retourné")
-        EN_RETARD = "EN_RETARD", _("En retard")
-        EN_ATTENTE ="EN_ATTENTE", _("En attente")
-
-    materiel = models.ForeignKey(
-        Materiel,
-        on_delete=models.PROTECT,  # on ne supprime pas un matériel en cours de prêt
-        related_name="emprunts",
-        verbose_name="Matériel",
-    )
-    emprunteur = models.ForeignKey(
-        Tierce,
-        on_delete=models.PROTECT,
-        related_name="emprunts",
-        verbose_name="Emprunteur",
-    )
-    date_emprunt = models.DateTimeField(auto_now_add=True)
-    date_retour_prevue = models.DateField(verbose_name="Retour prévu")
-    date_retour_effective = models.DateField(null=True, blank=True, verbose_name="Retour effectif")
-    statut = models.CharField(
-        max_length=20,
-        choices=Statut.choices,
-        default=Statut.EN_COURS,
-    )
-    notes = models.TextField(blank=True, verbose_name="Notes")
-
-    def __str__(self):
-        return f"{self.materiel} → {self.emprunteur} ({self.statut})"

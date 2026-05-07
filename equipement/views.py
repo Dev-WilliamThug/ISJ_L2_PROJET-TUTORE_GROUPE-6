@@ -8,12 +8,13 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from openpyxl.styles import Font, PatternFill
 
 from users.forms import LoginForm
 from users.models import CustomUser
-from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm
-from .models import Materiel, Tierce
+from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm,  EmpruntForm
+from .models import Materiel, Tierce,Emprunt, LigneEmprunt
 
 
 def manager_required(view_func):
@@ -144,6 +145,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     editFormEmprunteur = EditEmprunteurForm()
     formMateriel = MaterielForm()
     formEmprunteur= EnregistrerEmprunteurForm()
+    formEmprunt    = EmpruntForm()    
 
     action = request.POST.get("action")
     target = None
@@ -209,6 +211,54 @@ def retirer_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
+
+@login_required
+def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        form = EmpruntForm(request.POST)
+        if form.is_valid():
+            materiels_choisis = form.cleaned_data["materiels"]
+            date_emprunt     = form.cleaned_data["date_emprunt"]
+            now              = timezone.now()
+
+            # Statut automatique
+            if timezone.is_naive(date_emprunt):
+                date_emprunt = timezone.make_aware(date_emprunt)
+
+            statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.PLANIFIER
+
+            # Vérification disponibilité uniquement si EN_COURS
+            if statut == Emprunt.Statut.EN_COURS:
+                indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
+                if indisponibles:
+                    noms = ", ".join(m.nom for m in indisponibles)
+                    messages.error(request, f"Matériel(s) non disponible(s) : {noms}")
+                    return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
+
+            # Création de l'emprunt
+            emprunt = Emprunt.objects.create(
+                emprunteur=form.cleaned_data["emprunteur"],
+                date_emprunt=date_emprunt,
+                date_retour_prevue=form.cleaned_data["date_retour_prevue"],
+                statut=statut,
+                notes=form.cleaned_data["notes"],
+            )
+
+            # Création des lignes + mise en prêt si EN_COURS
+            for materiel in materiels_choisis:
+                LigneEmprunt.objects.create(emprunt=emprunt, materiel=materiel)
+                if statut == Emprunt.Statut.EN_COURS:
+                    materiel.mettre_en_pret()
+
+            messages.success(
+                request,
+                f"Emprunt enregistré avec succès ({len(materiels_choisis)} équipement(s), statut : {emprunt.get_statut_display()})."
+            )
+            return redirect(f"{reverse('equipement:dashboard')}?tab=home")
+
+        messages.error(request, "Erreur dans le formulaire.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
 
 
 def exporter_excel(request):

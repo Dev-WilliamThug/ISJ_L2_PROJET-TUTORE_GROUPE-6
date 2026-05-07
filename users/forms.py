@@ -26,3 +26,5 @@ class EditUserForm(forms.ModelForm):
         widgets = {
             "type_user": forms.Select(choices=CustomUser.TypeUser.choices),
         }
+
+
