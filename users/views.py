@@ -13,6 +13,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .forms import LoginForm, RegisterUserForm, EditUserForm
 from .models import CustomUser
+from equipement.models import Emprunt
 
 
 
@@ -91,6 +92,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
+    emprunts_en_attente = Emprunt.objects.select_related(
+        "materiel",
+        "emprunteur",
+    ).prefetch_related("lignes__materiel").filter(
+        statut=Emprunt.Statut.EN_ATTENTE
+    ).order_by("-date_emprunt")
 
     form = RegisterUserForm()
 
@@ -155,6 +162,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "form": form,
         "active_users": active_users,
         "disabled_users": disabled_users,
+        "emprunts_en_attente": emprunts_en_attente,
+        "statuts_emprunt": Emprunt.Statut.choices,
     }
     return render(request, "users/dashboard.html", context)
 

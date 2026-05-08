@@ -18,4 +18,5 @@ urlpatterns = [
     path("equipement/<str:materiel_id>/edit/", views.edit_equipement, name="edit_equipement"),
     path("emprunteur/<str:emprunteur_id>/retirer/", views.retirer_emprunteur, name="retirer_emprunteur"),
     path("emprunt/enregistrer/", views.enregistrer_emprunt_view, name="enregistrer_emprunt"),
+    path("emprunt/<int:emprunt_id>/statut/", views.modifier_statut_emprunt, name="modifier_statut_emprunt"),
 ]

@@ -24,6 +24,7 @@
           <a href="?tab=par_categorie" class="btn-secondary justify-center">Par catégorie</a>
           <a href="?tab=register" class="btn-secondary justify-center">Ajouter emprunteur</a>
           <a href="?tab=lister_emprunteurs" class="btn-secondary justify-center">Lister emprunteurs</a>
+          <a href="?tab=lister_emprunts" class="btn-secondary justify-center">Lister emprunts</a>
           <a href="?tab=import" class="btn-secondary justify-center sm:col-span-2">Importer Excel</a>
         </div>
       </section>
@@ -334,6 +335,79 @@
         updatePreview();
       })();
     </script>
+  {% endif %}
+
+  {% if tab == 'lister_emprunts' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-slate-800">Liste des emprunts</h2>
+        <a href="?tab=creer_emprunt" class="btn-primary">Ajouter</a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">ID</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Materiel</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Emprunteur</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Date d'emprunt</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Retour prevu</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Statut</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for emprunt in emprunts %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ emprunt.id }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">
+                  {% if emprunt.lignes.all %}
+                    <div class="space-y-1">
+                      {% for ligne in emprunt.lignes.all %}
+                        <div>{{ ligne.materiel }}</div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ emprunt.materiel }}
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_emprunt }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_retour_prevue }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">
+                  <details class="group">
+                    <summary class="inline-flex cursor-pointer list-none items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+                      {{ emprunt.get_statut_display }}
+                    </summary>
+                    <div class="fixed inset-0 z-40 grid place-items-center bg-slate-900/30 px-4">
+                      <form method="post" action="{% url 'equipement:modifier_statut_emprunt' emprunt.id %}" class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+                        {% csrf_token %}
+                        <input type="hidden" name="source" value="equipement" />
+                        <div class="mb-4">
+                          <h3 class="text-base font-bold text-slate-800">Changer le statut</h3>
+                          <p class="mt-1 text-sm text-slate-500">Emprunt #{{ emprunt.id }} - {{ emprunt.emprunteur }}</p>
+                        </div>
+                        <label class="mb-1 block text-sm font-semibold text-slate-700">Nouveau statut</label>
+                        <select name="statut" class="field">
+                          {% for value, label in statuts_emprunt %}
+                            <option value="{{ value }}" {% if emprunt.statut == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <div class="mt-5 flex justify-end gap-2">
+                          <button type="button" onclick="this.closest('details').removeAttribute('open')" class="btn-secondary px-3 py-2">Annuler</button>
+                          <button type="submit" class="btn-primary px-3 py-2">Modifier</button>
+                        </div>
+                      </form>
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunt enregistre.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
   {% endif %}
 
   {% if tab == 'import' %}

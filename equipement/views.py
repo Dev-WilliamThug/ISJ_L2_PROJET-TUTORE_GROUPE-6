@@ -9,6 +9,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from openpyxl.styles import Font, PatternFill
 
 from users.forms import LoginForm
@@ -152,6 +153,10 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     emprunteurs = Tierce.objects.all()
     materiels = Materiel.objects.all()
+    emprunts = Emprunt.objects.select_related(
+        "materiel",
+        "emprunteur",
+    ).prefetch_related("lignes__materiel").order_by("-date_emprunt")
 
     # ✅ AJOUT : filtrage par catégorie
     categorie_filtre = request.GET.get("categorie", "")
@@ -168,11 +173,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
         if action == "register_materiel":
             formMateriel = MaterielForm(request.POST)
-            register_materiel(request, formMateriel)
+            return register_materiel(request, formMateriel)
 
         if action == "register_emprunteur":
             formEmprunteur = EnregistrerEmprunteurForm(request.POST)
-            register_emprunteur(request, formEmprunteur())
+            return register_emprunteur(request, formEmprunteur)
 
     if tab == "detail" and request.GET.get("materiel_id"):
         materiel_detail = get_object_or_404(Materiel, pk=request.GET.get("materiel_id"))
@@ -193,6 +198,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "editEmprunteurForm": editFormEmprunteur,
         "emprunteur_detail": emprunteur_detail,
         "emprunteurs": emprunteurs,
+        "emprunts": emprunts,
+        "statuts_emprunt": Emprunt.Statut.choices,
         # ✅ AJOUT
         "categories": categories,
         "categorie_filtre": categorie_filtre,
@@ -216,6 +223,42 @@ def retirer_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
+@require_POST
+def modifier_statut_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
+    emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
+    nouveau_statut = request.POST.get("statut")
+    source = request.POST.get("source", "equipement")
+    statuts_valides = [statut for statut, _ in Emprunt.Statut.choices]
+
+    if nouveau_statut not in statuts_valides:
+        messages.error(request, "Statut invalide.")
+    else:
+        emprunt.statut = nouveau_statut
+        if nouveau_statut == Emprunt.Statut.RETOURNE:
+            emprunt.date_retour_effective = timezone.localdate()
+        elif nouveau_statut == Emprunt.Statut.EN_COURS:
+            emprunt.date_retour_effective = None
+        emprunt.save(update_fields=["statut", "date_retour_effective"])
+
+        materiels = [ligne.materiel for ligne in emprunt.lignes.all()]
+        if not materiels and emprunt.materiel_id:
+            materiels = [emprunt.materiel]
+
+        if nouveau_statut == Emprunt.Statut.RETOURNE:
+            for materiel in materiels:
+                materiel.retourner()
+        elif nouveau_statut == Emprunt.Statut.EN_COURS:
+            for materiel in materiels:
+                materiel.etat = "EN PRET"
+                materiel.save(update_fields=["etat"])
+
+        messages.success(request, "Statut de l'emprunt modifie avec succes.")
+
+    if source == "admin":
+        return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
+
+
 @login_required
 def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
@@ -228,7 +271,7 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
             if timezone.is_naive(date_emprunt):
                 date_emprunt = timezone.make_aware(date_emprunt)
 
-            statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.PLANIFIER
+            statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.EN_ATTENTE
 
             if statut == Emprunt.Statut.EN_COURS:
                 indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
@@ -238,6 +281,7 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                     return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
 
             emprunt = Emprunt.objects.create(
+                materiel=materiels_choisis[0],
                 emprunteur=form.cleaned_data["emprunteur"],
                 date_emprunt=date_emprunt,
                 date_retour_prevue=form.cleaned_data["date_retour_prevue"],
