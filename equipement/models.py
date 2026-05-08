@@ -5,11 +5,19 @@ from django.utils.translation import gettext_lazy as _
 from django.db import models
 
 class Materiel(models.Model):
-    id_materiel = models.CharField(max_length=50, primary_key=True, verbose_name="Identifiant")
-    nom = models.CharField(max_length=100)
-    couleur = models.CharField(max_length=30)
-    categorie = models.CharField(max_length=50)
-    
+
+    # ✅ AJOUT : catégories prédéfinies
+    class Categorie(models.TextChoices):
+        INFORMATIQUE = "INFORMATIQUE", "Informatique"
+        AUDIOVISUEL  = "AUDIOVISUEL",  "Audiovisuel"
+        MOBILIER     = "MOBILIER",     "Mobilier"
+        RESEAU       = "RESEAU",       "Réseau & Télécommunications"
+        LABORATOIRE  = "LABORATOIRE",  "Laboratoire"
+        SPORT        = "SPORT",        "Sport"
+        BUREAUTIQUE  = "BUREAUTIQUE",  "Bureautique"
+        SECURITE     = "SECURITE",     "Sécurité"
+        AUTRE        = "AUTRE",        "Autre"
+
     ETAT_CHOICES = [
         ('DISPONIBLE', 'Disponible'),
         ('EN PRET', 'En prêt'),
@@ -17,6 +25,17 @@ class Materiel(models.Model):
         ('EN MAINTENANCE', 'En maintenance'),
         ('HORS SERVICE', 'Hors service'),
     ]
+
+    id_materiel = models.CharField(max_length=50, primary_key=True, verbose_name="Identifiant")
+    nom = models.CharField(max_length=100)
+    couleur = models.CharField(max_length=30)
+    # ✅ AJOUT : choices et default sur le champ categorie
+    categorie = models.CharField(
+        max_length=50,
+        choices=Categorie.choices,
+        default=Categorie.AUTRE,
+        verbose_name="Catégorie",
+    )
     etat = models.CharField(
         max_length=14,
         choices=ETAT_CHOICES,
@@ -86,7 +105,7 @@ class Emprunt(models.Model):
 
     materiel = models.ForeignKey(
         Materiel,
-        on_delete=models.PROTECT,  # on ne supprime pas un matériel en cours de prêt
+        on_delete=models.PROTECT,
         related_name="emprunts",
         verbose_name="Matériel",
     )

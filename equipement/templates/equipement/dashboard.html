@@ -21,6 +21,7 @@
         <div class="mt-4 grid gap-3 sm:grid-cols-2">
           <a href="?tab=add" class="btn-primary justify-center">Ajouter equipement</a>
           <a href="?tab=list" class="btn-secondary justify-center">Lister equipements</a>
+          <a href="?tab=par_categorie" class="btn-secondary justify-center">Par catégorie</a>
           <a href="?tab=register" class="btn-secondary justify-center">Ajouter emprunteur</a>
           <a href="?tab=lister_emprunteurs" class="btn-secondary justify-center">Lister emprunteurs</a>
           <a href="?tab=import" class="btn-secondary justify-center sm:col-span-2">Importer Excel</a>
@@ -59,12 +60,27 @@
           <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
         </div>
       </div>
+      <!-- ✅ AJOUT : barre de filtres par catégorie -->
+      <div class="border-b border-slate-100 px-6 py-3 flex flex-wrap gap-2 items-center">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrer :</span>
+        <a href="?tab=list" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+          {% if not categorie_filtre %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+          Tout
+        </a>
+        {% for valeur, label in categories %}
+          <a href="?tab=list&categorie={{ valeur }}" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+            {% if categorie_filtre == valeur %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ label }}
+          </a>
+        {% endfor %}
+      </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
           <thead class="bg-slate-50">
             <tr>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Code</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Etat</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
             </tr>
@@ -74,6 +90,7 @@
               <tr class="hover:bg-slate-50">
                 <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_categorie_display }}</td>
                 <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}</td>
                 <td class="px-5 py-3">
                   <div class="flex flex-wrap items-center gap-2">
@@ -87,11 +104,55 @@
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">Aucun equipement enregistre.</td></tr>
+              <tr><td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500">
+                Aucun equipement {% if categorie_filtre %}dans cette catégorie{% else %}enregistre{% endif %}.
+              </td></tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
+    </section>
+  {% endif %}
+
+  <!-- ✅ AJOUT : onglet vue par catégorie -->
+  {% if tab == 'par_categorie' %}
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-800">Equipements par catégorie</h2>
+        <a href="?tab=list" class="btn-secondary">Vue liste</a>
+      </div>
+      {% for valeur, label in categories %}
+        <div class="rounded-xl border border-slate-200 bg-white shadow-soft overflow-hidden">
+          <div class="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-6 py-3">
+            <h3 class="font-semibold text-slate-700">{{ label }}</h3>
+            <a href="?tab=list&categorie={{ valeur }}" class="text-xs text-greenBrand-600 font-semibold hover:underline">Voir tout →</a>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100">
+              <thead class="bg-white">
+                <tr>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Code</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Nom</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Etat</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Marque</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for eq in materiels %}
+                  {% if eq.categorie == valeur %}
+                    <tr class="hover:bg-slate-50">
+                      <td class="px-5 py-2 text-sm font-semibold text-slate-700">{{ eq.id_materiel }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-700">{{ eq.nom }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-600">{{ eq.get_etat_display }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-600">{{ eq.marque }}</td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endfor %}
     </section>
   {% endif %}
 
@@ -103,7 +164,7 @@
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Code</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.id_materiel }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Etat</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.get_etat_display }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.nom }}</p></div>
-          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Categorie</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.categorie }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Categorie</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.get_categorie_display }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Couleur</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.couleur }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Marque</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.marque }}</p></div>
         </div>
@@ -180,7 +241,6 @@
     </section>
   {% endif %}
 
-
   {% if tab == 'detail_emprunteur' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Details de l'emprunteur</h2>
@@ -204,19 +264,12 @@
       <form class="space-y-5" method="post" action="{% url 'equipement:enregistrer_emprunt' %}">
         {% csrf_token %}
 
-        {# Date d'emprunt #}
         <div>
-          <label class="mb-1 block text-sm font-semibold text-slate-700">
-            Date d'emprunt
-          </label>
-          <input type="datetime-local" name="date_emprunt" value="{{ formEmprunt.date_emprunt.value|default:'' }}" required
-            class="field w-full" />
-          {% for error in formEmprunt.date_emprunt.errors %}
-          <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-          {% endfor %}
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Date d'emprunt</label>
+          <input type="datetime-local" name="date_emprunt" value="{{ formEmprunt.date_emprunt.value|default:'' }}" required class="field w-full" />
+          {% for error in formEmprunt.date_emprunt.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
 
-        {# Emprunteur #}
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Emprunteur</label>
           <select name="emprunteur" required class="field w-full">
@@ -227,74 +280,51 @@
             <option disabled>Aucun emprunteur enregistré</option>
             {% endfor %}
           </select>
-          {% for error in formEmprunt.emprunteur.errors %}
-          <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-          {% endfor %}
+          {% for error in formEmprunt.emprunteur.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
 
-        {# Sélection multiple équipements #}
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">
             Équipements disponibles
             <span class="ml-1 text-xs font-normal text-slate-400">(maintenez Ctrl pour en sélectionner plusieurs)</span>
           </label>
           {% if materiels_disponibles %}
-            <select name="materiels" multiple required
-              class="field w-full rounded-lg border border-slate-200 p-2 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100"
-              style="min-height: 160px;">
+            <select name="materiels" multiple required class="field w-full rounded-lg border border-slate-200 p-2 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100" style="min-height: 160px;">
               {% for m in materiels_disponibles %}
               <option value="{{ m.id_materiel }}">{{ m.nom }} — {{ m.id_materiel }}</option>
               {% endfor %}
             </select>
-            <p class="mt-1 text-xs text-slate-400">
-              {{ materiels_disponibles|length }} équipement(s) disponible(s)
-            </p>
+            <p class="mt-1 text-xs text-slate-400">{{ materiels_disponibles|length }} équipement(s) disponible(s)</p>
           {% else %}
-            <p class="rounded-lg border border-slate-200 p-4 text-sm text-slate-500">
-              Aucun équipement disponible.
-            </p>
+            <p class="rounded-lg border border-slate-200 p-4 text-sm text-slate-500">Aucun équipement disponible.</p>
           {% endif %}
-          {% for error in formEmprunt.materiels.errors %}
-            <p class="mt-1 text-xs text-red-600">{{ error }}</p>
-          {% endfor %}
+          {% for error in formEmprunt.materiels.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
 
-        {# Date de retour #}
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Date de retour prévue</label>
           <input type="date" name="date_retour_prevue" required class="field w-full" />
-          {% for error in formEmprunt.date_retour_prevue.errors %}
-          
-          {% endfor %}
         </div>
 
-        {# Notes #}
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">
             Notes <span class="font-normal text-slate-400">(optionnel)</span>
           </label>
-          <textarea name="notes" rows="3" class="field w-full resize-none"
-            placeholder="Observations, conditions particulières..."></textarea>
+          <textarea name="notes" rows="3" class="field w-full resize-none" placeholder="Observations, conditions particulières..."></textarea>
         </div>
 
-        {# Indicateur de statut attendu #}
         <div id="statut-preview" class="hidden rounded-lg border p-3 text-sm font-medium"></div>
 
         <div>
-          <button class="btn-primary w-full sm:w-auto" type="submit">
-            Enregistrer l'emprunt
-          </button>
+          <button class="btn-primary w-full sm:w-auto" type="submit">Enregistrer l'emprunt</button>
         </div>
       </form>
     </section>
 
-    {# Script : prévisualisation du statut selon la date #}
     <script>
       (function () {
         const input = document.querySelector('input[name="date_emprunt"]');
         const preview = document.getElementById('statut-preview');
-
-
         if (!input.value) {
           const now = new Date();
           now.setSeconds(0, 0);
@@ -304,7 +334,7 @@
         updatePreview();
       })();
     </script>
-{% endif %}
+  {% endif %}
 
   {% if tab == 'import' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">

@@ -13,8 +13,8 @@ from openpyxl.styles import Font, PatternFill
 
 from users.forms import LoginForm
 from users.models import CustomUser
-from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm,  EmpruntForm
-from .models import Materiel, Tierce,Emprunt, LigneEmprunt
+from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
+from .models import Materiel, Tierce, Emprunt, LigneEmprunt
 
 
 def manager_required(view_func):
@@ -29,14 +29,12 @@ def manager_required(view_func):
     return _wrapped
 
 
-
 def module_choice(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
             return redirect("users:dashboard")
         return redirect("equipement:dashboard")
     return render(request, "equipement/module_choice.html")
-
 
 
 def login_view(request: HttpRequest) -> HttpResponse:
@@ -69,7 +67,7 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return redirect("users:module_choice")
 
 
-def register_materiel(request:HttpRequest,form:MaterielForm) -> HttpResponse:
+def register_materiel(request: HttpRequest, form: MaterielForm) -> HttpResponse:
     if request.method != "POST":
         messages.error(request, "Action non autorisee.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=add")
@@ -79,7 +77,7 @@ def register_materiel(request:HttpRequest,form:MaterielForm) -> HttpResponse:
         return redirect(f"{reverse('equipement:dashboard')}?tab=list")
     messages.error(request, "Veuillez corriger les erreurs du formulaire equipement.")
     return redirect(f"{reverse('equipement:dashboard')}?tab=add")
-    
+
 
 @login_required
 def edit_equipement(request: HttpRequest, materiel_id: str) -> HttpResponse:
@@ -137,27 +135,34 @@ def edit_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
     })
 
 
-
 def dashboard(request: HttpRequest) -> HttpResponse:
-    tab = request.GET.get("tab", "home") #Si tab a déjà une valeur on la recupère sinon on fixe la valeur par defaut à home
+    tab = request.GET.get("tab", "home")
 
     editFormMateriel = EditMaterielForm()
     editFormEmprunteur = EditEmprunteurForm()
     formMateriel = MaterielForm()
-    formEmprunteur= EnregistrerEmprunteurForm()
-    formEmprunt    = EmpruntForm()    
+    formEmprunteur = EnregistrerEmprunteurForm()
+    formEmprunt = EmpruntForm()
 
     action = request.POST.get("action")
     target = None
 
     materiel_detail = None
     emprunteur_detail = None
-    
+
     emprunteurs = Tierce.objects.all()
     materiels = Materiel.objects.all()
 
-    materiels_recents = materiels.order_by("-id_materiel")[:5]
-    materiels_disponibles = materiels.filter(etat="DISPONIBLE")
+    # ✅ AJOUT : filtrage par catégorie
+    categorie_filtre = request.GET.get("categorie", "")
+    if categorie_filtre:
+        materiels = materiels.filter(categorie=categorie_filtre)
+
+    # ✅ AJOUT : liste des catégories pour le template
+    categories = Materiel.Categorie.choices
+
+    materiels_recents = Materiel.objects.order_by("-id_materiel")[:5]
+    materiels_disponibles = Materiel.objects.filter(etat="DISPONIBLE")
 
     if request.method == "POST":
 
@@ -168,19 +173,18 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         if action == "register_emprunteur":
             formEmprunteur = EnregistrerEmprunteurForm(request.POST)
             register_emprunteur(request, formEmprunteur())
-            
 
     if tab == "detail" and request.GET.get("materiel_id"):
         materiel_detail = get_object_or_404(Materiel, pk=request.GET.get("materiel_id"))
     if tab == "detail_emprunteur" and request.GET.get("emprunteur_id"):
         emprunteur_detail = get_object_or_404(Tierce, pk=request.GET.get("emprunteur_id"))
-   
- 
+
     context = {
         "tab": tab,
         "target": target,
-        "formMateriel":formMateriel,
+        "formMateriel": formMateriel,
         "formEmprunteur": formEmprunteur,
+        "formEmprunt": formEmprunt,
         "materiels": materiels,
         "materiels_recents": materiels_recents,
         "materiels_disponibles": materiels_disponibles,
@@ -189,10 +193,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "editEmprunteurForm": editFormEmprunteur,
         "emprunteur_detail": emprunteur_detail,
         "emprunteurs": emprunteurs,
+        # ✅ AJOUT
+        "categories": categories,
+        "categorie_filtre": categorie_filtre,
     }
     return render(request, "equipement/dashboard.html", context)
-
-
 
 
 def detail_materiel(request, materiel_id):
@@ -211,23 +216,20 @@ def retirer_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
-
 @login_required
 def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
     if request.method == "POST":
         form = EmpruntForm(request.POST)
         if form.is_valid():
             materiels_choisis = form.cleaned_data["materiels"]
-            date_emprunt     = form.cleaned_data["date_emprunt"]
-            now              = timezone.now()
+            date_emprunt = form.cleaned_data["date_emprunt"]
+            now = timezone.now()
 
-            # Statut automatique
             if timezone.is_naive(date_emprunt):
                 date_emprunt = timezone.make_aware(date_emprunt)
 
             statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.PLANIFIER
 
-            # Vérification disponibilité uniquement si EN_COURS
             if statut == Emprunt.Statut.EN_COURS:
                 indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
                 if indisponibles:
@@ -235,7 +237,6 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                     messages.error(request, f"Matériel(s) non disponible(s) : {noms}")
                     return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
 
-            # Création de l'emprunt
             emprunt = Emprunt.objects.create(
                 emprunteur=form.cleaned_data["emprunteur"],
                 date_emprunt=date_emprunt,
@@ -244,7 +245,6 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                 notes=form.cleaned_data["notes"],
             )
 
-            # Création des lignes + mise en prêt si EN_COURS
             for materiel in materiels_choisis:
                 LigneEmprunt.objects.create(emprunt=emprunt, materiel=materiel)
                 if statut == Emprunt.Statut.EN_COURS:
@@ -266,11 +266,9 @@ def exporter_excel(request):
     ws = wb.active
     ws.title = "Materiels"
 
-    # ✅ Format officiel (IMPORTANT)
     headers = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque']
     ws.append(headers)
 
-    # Données
     for m in Materiel.objects.all():
         ws.append([
             str(m.id_materiel),
@@ -285,10 +283,8 @@ def exporter_excel(request):
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
     response['Content-Disposition'] = 'attachment; filename=materiels.xlsx'
-
     wb.save(response)
     return response
-
 
 
 def import_materiels(request):
@@ -323,7 +319,6 @@ def import_materiels(request):
             ignores += 1
             continue
 
-        # Nettoyage
         row = [str(cell).strip() if cell else "" for cell in row]
 
         if len(row) < 6:
@@ -336,12 +331,10 @@ def import_materiels(request):
             ignores += 1
             continue
 
-        # Normalisation état
         etat = etat.upper()
         if etat not in valeurs_valides:
             etat = "DISPONIBLE"
 
-        # Sauvegarde
         Materiel.objects.update_or_create(
             id_materiel=id_materiel,
             defaults={
@@ -352,14 +345,12 @@ def import_materiels(request):
                 "marque": marque,
             }
         )
-
         importes += 1
 
     messages.success(
         request,
         f"Import terminé : {importes} lignes traitées, {ignores} ignorées."
     )
-
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
@@ -368,11 +359,9 @@ def detail_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
 
 
-
 def detail_emprunteur(request, emprunteur_id):
     get_object_or_404(Tierce, id_Tierce=emprunteur_id)
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail_emprunteur&emprunteur_id={emprunteur_id}")
-
 
 
 def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
