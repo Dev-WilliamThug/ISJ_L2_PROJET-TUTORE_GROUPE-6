@@ -6,7 +6,7 @@ from django.db import models
 
 class Materiel(models.Model):
 
-    # ✅ AJOUT : catégories prédéfinies
+ 
     class Categorie(models.TextChoices):
         INFORMATIQUE = "INFORMATIQUE", "Informatique"
         AUDIOVISUEL  = "AUDIOVISUEL",  "Audiovisuel"
@@ -29,7 +29,7 @@ class Materiel(models.Model):
     id_materiel = models.CharField(max_length=50, primary_key=True, verbose_name="Identifiant")
     nom = models.CharField(max_length=100)
     couleur = models.CharField(max_length=30)
-    # ✅ AJOUT : choices et default sur le champ categorie
+    
     categorie = models.CharField(
         max_length=50,
         choices=Categorie.choices,

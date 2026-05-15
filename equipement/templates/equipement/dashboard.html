@@ -61,7 +61,7 @@
           <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
         </div>
       </div>
-      <!-- ✅ AJOUT : barre de filtres par catégorie -->
+      
       <div class="border-b border-slate-100 px-6 py-3 flex flex-wrap gap-2 items-center">
         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrer :</span>
         <a href="?tab=list" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
@@ -115,7 +115,7 @@
     </section>
   {% endif %}
 
-  <!-- ✅ AJOUT : onglet vue par catégorie -->
+ 
   {% if tab == 'par_categorie' %}
     <section class="space-y-6">
       <div class="flex items-center justify-between">
@@ -341,8 +341,11 @@
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des emprunts</h2>
+           <div class="flex gap-2">
         <a href="?tab=creer_emprunt" class="btn-primary">Ajouter</a>
+        <a href="{% url 'equipement:exporter_template_emprunts' %}" class="btn-secondary">Exporter</a>
       </div>
+       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
           <thead class="bg-slate-50">
@@ -411,6 +414,7 @@
   {% endif %}
 
   {% if tab == 'import' %}
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>
       <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel, nom, couleur, categorie, etat, marque.</p>
@@ -420,5 +424,15 @@
         <button type="submit" class="btn-primary">Importer maintenant</button>
       </form>
     </section>
+     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Importer facilements les emprunts (Excel)</h2>
+      <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel,id_emprunteur ,  date_emprunt,   retour_prevu, statut, note.</p>
+      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_emprunts' %}">
+        {% csrf_token %}
+        <input class="field" type="file" name="file" accept=".xlsx" required />
+        <button type="submit" class="btn-primary">Importer</button>
+      </form>
+    </section>
+  </div>
   {% endif %}
 {% endblock %}

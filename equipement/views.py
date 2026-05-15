@@ -158,12 +158,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "emprunteur",
     ).prefetch_related("lignes__materiel").order_by("-date_emprunt")
 
-    # ✅ AJOUT : filtrage par catégorie
+  
     categorie_filtre = request.GET.get("categorie", "")
     if categorie_filtre:
         materiels = materiels.filter(categorie=categorie_filtre)
 
-    # ✅ AJOUT : liste des catégories pour le template
+    
     categories = Materiel.Categorie.choices
 
     materiels_recents = Materiel.objects.order_by("-id_materiel")[:5]
@@ -200,7 +200,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "emprunteurs": emprunteurs,
         "emprunts": emprunts,
         "statuts_emprunt": Emprunt.Statut.choices,
-        # ✅ AJOUT
+    
         "categories": categories,
         "categorie_filtre": categorie_filtre,
     }
@@ -418,3 +418,233 @@ def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse
     emprunteur.delete()
     messages.success(request, f"Emprunteur {nom_complet} supprime avec succes.")
     return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
+
+def import_emprunts(request):
+    if request.method != "POST":
+        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+
+    fichier = request.FILES.get("file")
+
+    if not fichier:
+        messages.error(request, "Veuillez sélectionner un fichier.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+
+    if not fichier.name.endswith(".xlsx"):
+        messages.error(request, "Fichier invalide (.xlsx requis).")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+
+    try:
+        wb = openpyxl.load_workbook(fichier)
+        ws = wb.active
+    except Exception as e:
+        messages.error(request, f"Erreur lecture fichier : {e}")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+
+    importes = 0
+    mis_a_jour = 0
+    ignores = 0
+    erreurs = []
+
+    valeurs_valides = [c[0] for c in Emprunt.Statut.choices]
+
+    for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+
+        if not any(row):
+            ignores += 1
+            continue
+
+        row = [str(cell).strip() if cell is not None else "" for cell in row]
+
+        if len(row) < 6:
+            erreurs.append(f"Ligne {i} : pas assez de colonnes ({len(row)})")
+            ignores += 1
+            continue
+
+        emprunt_id     = row[0] 
+        noms_materiels = row[1]
+        nom_emprunteur = row[2]
+        date_emprunt   = row[3]  
+        retour_prevu   = row[4]
+        notes          = row[5]
+        statut         = row[6] if len(row) > 6 else "EN_COURS"
+
+        if not noms_materiels or not nom_emprunteur:
+            erreurs.append(f"Ligne {i} : matériel ou emprunteur vide")
+            ignores += 1
+            continue
+
+        if not retour_prevu:
+            erreurs.append(f"Ligne {i} : date de retour manquante")
+            ignores += 1
+            continue
+
+        retour_prevu_date = None
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S"):
+            try:
+                retour_prevu_date = datetime.strptime(retour_prevu, fmt).date()
+                break
+            except ValueError:
+                continue
+
+        if retour_prevu_date is None:
+            erreurs.append(f"Ligne {i} : format date invalide '{retour_prevu}'")
+            ignores += 1
+            continue
+
+        statut = statut.upper().strip()
+        if statut not in valeurs_valides:
+            statut = "EN_COURS"
+
+        parties = nom_emprunteur.strip().split()
+        emprunteur_obj = None
+
+        if len(parties) >= 2:
+            emprunteur_obj = Tierce.objects.filter(
+                prenom__iexact=parties[0],
+                nom__iexact=" ".join(parties[1:])
+            ).first()
+            if not emprunteur_obj:
+                emprunteur_obj = Tierce.objects.filter(
+                    nom__iexact=parties[0],
+                    prenom__iexact=" ".join(parties[1:])
+                ).first()
+
+        if not emprunteur_obj:
+            emprunteur_obj = Tierce.objects.filter(nom__iexact=nom_emprunteur).first()
+        if not emprunteur_obj:
+            emprunteur_obj = Tierce.objects.filter(prenom__iexact=nom_emprunteur).first()
+
+        if not emprunteur_obj:
+            erreurs.append(f"Ligne {i} : emprunteur '{nom_emprunteur}' introuvable en base")
+            ignores += 1
+            continue
+
+        noms_liste = [n.strip() for n in noms_materiels.split(",")]
+        materiels_objs = []
+        ligne_ok = True
+
+        for nom in noms_liste:
+            try:
+                m = Materiel.objects.get(nom__iexact=nom)
+                materiels_objs.append(m)
+                continue
+            except Materiel.DoesNotExist:
+                pass
+            except Materiel.MultipleObjectsReturned:
+                erreurs.append(f"Ligne {i} : plusieurs matériels trouvés pour '{nom}'")
+                ligne_ok = False
+                break
+
+            try:
+                m = Materiel.objects.get(id_materiel__iexact=nom)
+                materiels_objs.append(m)
+                continue
+            except Materiel.DoesNotExist:
+                erreurs.append(f"Ligne {i} : matériel '{nom}' introuvable en base")
+                ligne_ok = False
+                break
+
+        if not ligne_ok or not materiels_objs:
+            ignores += 1
+            continue
+
+        try:
+            emprunt_id_int = int(emprunt_id) if emprunt_id.isdigit() else None
+
+            if emprunt_id_int:
+                emprunt, created = Emprunt.objects.update_or_create(
+                    id=emprunt_id_int,
+                    defaults={
+                        "materiel": materiels_objs[0],
+                        "emprunteur": emprunteur_obj,
+                        "date_retour_prevue": retour_prevu_date,
+                        "statut": statut,
+                        "notes": notes,
+                    }
+                )
+            else:
+                emprunt = Emprunt.objects.create(
+                    materiel=materiels_objs[0],
+                    emprunteur=emprunteur_obj,
+                    date_retour_prevue=retour_prevu_date,
+                    statut=statut,
+                    notes=notes,
+                )
+                created = True
+
+            emprunt.lignes.all().delete()  
+            for m in materiels_objs:
+                LigneEmprunt.objects.create(emprunt=emprunt, materiel=m)
+
+            if created:
+                importes += 1
+            else:
+                mis_a_jour += 1
+
+        except Exception as e:
+            erreurs.append(f"Ligne {i} : erreur : {e}")
+            ignores += 1
+            continue
+
+    if importes > 0 or mis_a_jour > 0:
+        messages.success(
+            request,
+            f"Import terminé : {importes} créé(s), {mis_a_jour} mis à jour, {ignores} ignoré(s)."
+        )
+    else:
+        messages.error(request, f"Aucun emprunt importé. {ignores} ligne(s) ignorée(s).")
+
+    for erreur in erreurs[:10]:
+        messages.warning(request, erreur)
+
+    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
+def exporter_template_emprunts(request):
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Emprunts"
+    headers = ['id', 'materiel', 'emprunteur', 'date_emprunt', 'date_retour_prevue', 'notes', 'statut']
+    ws.append(headers)
+    for cell in ws[1]:
+        cell.font = Font(bold=True)
+        cell.fill = PatternFill("solid", fgColor="16A34A")
+
+    emprunts = Emprunt.objects.select_related(
+        "materiel", "emprunteur"
+    ).prefetch_related("lignes__materiel").order_by("id")
+
+    for emprunt in emprunts:
+
+        lignes = emprunt.lignes.all()
+        if lignes.exists():
+            noms_materiels = ", ".join(ligne.materiel.nom for ligne in lignes)
+        else:
+            noms_materiels = emprunt.materiel.nom if emprunt.materiel else ""
+
+        ws.append([
+            emprunt.id,
+            noms_materiels,
+            f"{emprunt.emprunteur.prenom} {emprunt.emprunteur.nom}",
+            emprunt.date_emprunt.strftime("%Y-%m-%d %H:%M:%S") if emprunt.date_emprunt else "",
+            emprunt.date_retour_prevue.strftime("%Y-%m-%d") if emprunt.date_retour_prevue else "",
+            emprunt.notes or "",
+            emprunt.statut or "",
+        ])
+    ws2 = wb.create_sheet(title="Materiels")
+    ws2.append(['nom', 'id_materiel', 'etat'])
+    for cell in ws2[1]:
+        cell.font = Font(bold=True)
+    for m in Materiel.objects.all():
+        ws2.append([m.nom, m.id_materiel, m.etat])
+    ws3 = wb.create_sheet(title="Emprunteurs")
+    ws3.append(['nom_complet', 'id_Tierce', 'type'])
+    for cell in ws3[1]:
+        cell.font = Font(bold=True)
+    for e in Tierce.objects.all():
+        ws3.append([f"{e.prenom} {e.nom}", e.id_Tierce, e.type_Tierce])
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=emprunts.xlsx'
+    wb.save(response)
+    return response
