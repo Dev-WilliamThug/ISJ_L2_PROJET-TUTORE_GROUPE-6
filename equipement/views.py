@@ -1,7 +1,6 @@
 import openpyxl
 from datetime import datetime
 from functools import wraps
-
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
@@ -30,42 +29,39 @@ def manager_required(view_func):
     return _wrapped
 
 
-def module_choice(request: HttpRequest) -> HttpResponse:
-    if request.user.is_authenticated:
-        if request.user.type_user == CustomUser.TypeUser.ADMIN:
-            return redirect("users:dashboard")
-        return redirect("equipement:dashboard")
-    return render(request, "equipement/module_choice.html")
-
 
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        if request.user.type_user == CustomUser.TypeUser.MANAGER:
-            return redirect("equipement:dashboard")
-        return redirect("users:dashboard")
+        if request.user.type_user == CustomUser.TypeUser.ADMIN:
+            return redirect("users:dashboard")
+        elif request.user.type_user == CustomUser.TypeUser.MANAGER:
+                return redirect("equipement:dashboard")
     form = LoginForm(request.POST or None)
-    if request.method == "POST" and form.is_valid():
-        email = form.cleaned_data["email"].lower()
-        password = form.cleaned_data["password"]
+    if request.method == "POST":
+        if form.is_valid():
+            email = form.cleaned_data["email"].lower()
+            password = form.cleaned_data["password"]
 
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            user = None
+            try:
+                user = CustomUser.objects.get(email=email)
+            except CustomUser.DoesNotExist:
+                user = None
 
-        if not user or (not user.is_active) or (not user.check_password(password)):
-            messages.error(request, "Identifiants incorrects.")
-        else:
-            login(request, user)
-            return redirect("equipement:dashboard")
-
+            if not user or (not user.is_active) or (not user.check_password(password)):
+                messages.error(request, "Identifiants incorrects.")
+            else:
+                login(request, user)
+            if request.user.type_user == CustomUser.TypeUser.ADMIN:
+                return redirect("users:dashboard")
+            elif request.user.type_user == CustomUser.TypeUser.MANAGER:
+                return redirect("equipement:dashboard")
     return render(request, "equipement/login.html", {"form": form})
 
 
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     messages.success(request, "Déconnexion effectuée.")
-    return redirect("users:module_choice")
+    return redirect("equipement:login")
 
 
 def register_materiel(request: HttpRequest, form: MaterielForm) -> HttpResponse:

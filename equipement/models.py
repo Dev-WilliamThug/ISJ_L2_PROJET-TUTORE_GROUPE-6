@@ -75,7 +75,7 @@ class Tierce(models.Model):
     )
     nom = models.CharField(max_length=200)
     prenom = models.CharField(max_length=200)
-    email = models.EmailField(_("email address"), unique=True)
+    email = models.EmailField(_("email address"), unique=True) 
     type_Tierce = models.CharField(
         max_length=30,
         choices=TypeTierce.choices,
@@ -95,42 +95,71 @@ class Tierce(models.Model):
     def __str__(self):
         return self.get_full_name()
 
+class Classe(models.Model):
+    
+    nom = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    nombre_places = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['nom']
+        verbose_name = "Classe"
+        verbose_name_plural = "Classes"
+ 
+    def __str__(self):
+        return self.nom
+    
 class Emprunt(models.Model):
-
+ 
+    
+    class TypeOperation(models.TextChoices):
+        ENTREE = "entree", _("Entrée (enregistrement)")
+        SORTIE = "sortie", _("Sortie (planifiée)")
+        EMPRUNT = "emprunt", _("Emprunt")
+ 
     class Statut(models.TextChoices):
-        EN_COURS = "EN_COURS", _("En cours")
-        RETOURNE = "RETOURNE", _("Retourné")
-        EN_RETARD = "EN_RETARD", _("En retard")
-        EN_ATTENTE ="EN_ATTENTE", _("En attente")
-
-    materiel = models.ForeignKey(
-        Materiel,
-        on_delete=models.PROTECT,
-        related_name="emprunts",
-        verbose_name="Matériel",
-    )
-    emprunteur = models.ForeignKey(
-        Tierce,
-        on_delete=models.PROTECT,
-        related_name="emprunts",
-        verbose_name="Emprunteur",
-    )
+        EN_ATTENTE = "en_attente", _("En attente")
+        APPROUVE = "approuve", _("Approuvé")
+        REFUSE = "refuse", _("Refusé")
+        RETOURNE = "retourne", _("Retourné")
+ 
+    # Champs existants (à conserver)
+    materiel = models.ForeignKey("Materiel", on_delete=models.CASCADE, related_name="emprunts")
+    emprunteur = models.ForeignKey("equipement.Tierce", on_delete=models.CASCADE)
+    classe = models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, blank=True)
     date_emprunt = models.DateTimeField(auto_now_add=True)
-    date_retour_prevue = models.DateField(verbose_name="Retour prévu")
-    date_retour_effective = models.DateField(null=True, blank=True, verbose_name="Retour effectif")
+    date_retour_prevue = models.DateField(null=True, blank=True)
+    date_retour_reelle = models.DateField(null=True, blank=True)
     statut = models.CharField(
         max_length=20,
         choices=Statut.choices,
-        default=Statut.EN_COURS,
+        default=Statut.EN_ATTENTE
     )
-    notes = models.TextField(blank=True, verbose_name="Notes")
-
+    
+   
+    type_operation = models.CharField(
+        max_length=20,
+        choices=TypeOperation.choices,
+        default=TypeOperation.EMPRUNT
+    )
+    
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['-date_emprunt']
+        verbose_name = "Emprunt"
+        verbose_name_plural = "Emprunts"
+ 
     def __str__(self):
-        return f"{self.materiel} → {self.emprunteur} ({self.statut})"
+        return f"{self.materiel} - {self.emprunteur}"
 
 
 class LigneEmprunt(models.Model):
-    """Un enregistrement par matériel dans un emprunt."""
+    
     emprunt = models.ForeignKey(
         Emprunt,
         on_delete=models.CASCADE,
@@ -149,3 +178,5 @@ class LigneEmprunt(models.Model):
 
     def __str__(self):
          return f"{self.materiel} dans Emprunt #{self.emprunt_id}"
+
+

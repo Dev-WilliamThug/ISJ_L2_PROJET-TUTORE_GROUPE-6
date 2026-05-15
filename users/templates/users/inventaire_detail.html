@@ -1,0 +1,173 @@
+{% extends "users/base.html" %}
+
+{% block title %}Inventaire – {{ classe.nom }} – {{ date|date:"d/m/Y" }}{% endblock %}
+{% block page_title %}Inventaire : {{ classe.nom }}{% endblock %}
+
+{% block content %}
+<section class="space-y-6">
+
+  {# ── Messages ── #}
+  {% if messages %}
+    {% for message in messages %}
+      <div class="rounded-lg border px-4 py-3 text-sm font-medium
+        {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+        {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+        {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {# ── Fiche récap ── #}
+  <div class="grid gap-4 sm:grid-cols-3">
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Classe</p>
+      <p class="mt-1 text-2xl font-bold text-navy-800">{{ classe.nom }}</p>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Date d'inventaire</p>
+      <p class="mt-1 text-2xl font-bold text-navy-800">{{ date|date:"d/m/Y" }}</p>
+    </div>
+    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Catégories suivies</p>
+      <p class="mt-1 text-2xl font-bold text-navy-800">{{ inventaire_data|length }}</p>
+    </div>
+  </div>
+
+  {# ── Formulaire de saisie ── #}
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-800">Saisie par catégorie</h2>
+          <p class="mt-0.5 text-xs text-slate-400">
+            Entrez le stock réel constaté. La différence est calculée automatiquement.
+          </p>
+        </div>
+      </div>
+
+      {% if inventaire_data %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
+                <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Stock initial</th>
+                <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Emprunté (système)</th>
+                <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Stock réel constaté</th>
+                <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Différence</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 bg-white" id="inventaire-tbody">
+              {% for cat_id, data in inventaire_data.items %}
+                <tr class="hover:bg-slate-50 transition-colors" data-row="{{ cat_id }}">
+                  <td class="px-5 py-4 text-sm font-semibold text-slate-800">
+                    {{ data.categorie.nom }}
+                  </td>
+                  <td class="px-5 py-4 text-center text-sm text-slate-700">
+                    {{ data.stock_initial }}
+                  </td>
+                  <td class="px-5 py-4 text-center">
+                    <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
+                      {{ data.stock_emprute }}
+                    </span>
+                  </td>
+                  <td class="px-5 py-4 text-center">
+                    <input
+                      type="number"
+                      name="stock_reel_{{ data.ligne_id }}"
+                      id="reel_{{ data.ligne_id }}"
+                      value="{{ data.stock_reel }}"
+                      min="0"
+                      class="w-24 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-center text-sm font-semibold text-slate-800 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-200"
+                      data-initial="{{ data.stock_initial }}"
+                      data-diff-target="diff_{{ data.ligne_id }}"
+                      oninput="updateDiff(this)"
+                    />
+                  </td>
+                  <td class="px-5 py-4 text-center" id="diff_{{ data.ligne_id }}">
+                    {% with diff=data.difference %}
+                      {% if diff == 0 %}
+                        <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">= 0</span>
+                      {% elif diff > 0 %}
+                        <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">+{{ diff }}</span>
+                      {% else %}
+                        <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">{{ diff }}</span>
+                      {% endif %}
+                    {% endwith %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="px-6 py-10 text-center">
+          <svg class="mx-auto h-10 w-10 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 13V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 13h16M8 21l4-4 4 4"/>
+          </svg>
+          <p class="mt-3 text-sm font-medium text-slate-400">
+            Aucun équipement emprunté dans cette classe pour la période sélectionnée.
+          </p>
+        </div>
+      {% endif %}
+    </div>
+
+    {# ── Actions ── #}
+    {% if inventaire_data %}
+      <div class="mt-5 flex items-center gap-3">
+        <button type="submit" class="btn-primary">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/>
+          </svg>
+          Enregistrer l'inventaire
+        </button>
+        <a href="{% url 'users:inventaire_list' %}" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+          Annuler
+        </a>
+      </div>
+    {% else %}
+      <div class="mt-5">
+        <a href="{% url 'users:inventaire_form' %}" class="btn-primary">
+          Retour
+        </a>
+      </div>
+    {% endif %}
+
+  </form>
+
+</section>
+
+<script>
+  /**
+   * Recalcule la différence (stock_réel - stock_initial) en temps réel
+   * et met à jour l'affichage coloré sans rechargement de page.
+   */
+  function updateDiff(input) {
+    const initial = parseInt(input.dataset.initial, 10) || 0;
+    const reel    = parseInt(input.value, 10);
+    const targetId = input.dataset.diffTarget;
+    const cell = document.getElementById(targetId);
+    if (!cell) return;
+
+    if (isNaN(reel)) {
+      cell.innerHTML = '<span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-400">—</span>';
+      return;
+    }
+
+    const diff = reel - initial;
+    let html;
+    if (diff === 0) {
+      html = '<span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">= 0</span>';
+    } else if (diff > 0) {
+      html = `<span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">+${diff}</span>`;
+    } else {
+      html = `<span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">${diff}</span>`;
+    }
+    cell.innerHTML = html;
+  }
+</script>
+{% endblock %}
