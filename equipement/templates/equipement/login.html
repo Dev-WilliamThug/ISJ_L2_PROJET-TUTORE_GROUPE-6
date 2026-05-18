@@ -3,46 +3,92 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Connexion - Gestion Equipement</title>
+    <title>Connexion - Gestion Utilisateurs</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              greenBrand: { 500: "#15803d", 600: "#166534", 700: "#14532d" },
-              darkPanel: "#0f2a1f",
-            },
-          },
-        },
+              navy: { 800: "#152238", 900: "#0f1825" },
+              primary: { 500: "#2563eb", 600: "#1d4ed8", 700: "#1e40af" }
+            }
+          }
+        }
       };
     </script>
   </head>
   <body class="min-h-screen bg-slate-100 text-slate-800">
     <div class="mx-auto grid min-h-screen w-full max-w-6xl items-center px-4 py-8 lg:grid-cols-2 lg:gap-12">
-      <div class="hidden rounded-2xl bg-darkPanel p-10 text-white shadow-2xl lg:block">
+
+      {# ── Panneau gauche (bleu marine) ── #}
+      <div class="hidden rounded-2xl bg-navy-800 p-10 text-white shadow-2xl lg:block">
         <div class="mb-6 flex items-center gap-3">
-          <div class="grid h-10 w-10 place-items-center rounded-lg bg-greenBrand-600 shadow">
+          <div class="grid h-10 w-10 place-items-center rounded-lg bg-primary-600 shadow">
             <svg class="h-6 w-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l9 4 9-4"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9 4 9-4"/>
+              <rect x="2" y="3" width="20" height="14" rx="2"/>
+              <path stroke-linecap="round" d="M8 21h8M12 17v4"/>
             </svg>
           </div>
-          <p class="text-xs font-bold uppercase tracking-widest text-emerald-200">Module gestionnaire</p>
+          <p class="text-xs font-bold uppercase tracking-widest text-slate-400">Système de Gestion de Equipements</p>
         </div>
-        <h1 class="mt-2 text-4xl font-bold leading-tight">Gestion des equipements</h1>
-        <p class="mt-4 text-sm leading-relaxed text-emerald-100/80">Connectez-vous pour piloter les emprunts et administrer le parc d'equipements.</p>
+        <h1 class="mt-2 text-4xl font-bold leading-tight">
+          Gestion des<br/>Equipements
+        </h1>
+        <p class="mt-4 text-sm leading-relaxed text-slate-400">
+          Plateforme sécurisée de gestion des equipements. Connectez-vous avec vos identifiants.
+        </p>
+
+        <div class="mt-8 space-y-3">
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-primary-600/30 text-primary-400">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m3.75 9v6m3-3H9m1.5-12H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+              </svg>
+
+            </div>
+            <p class="text-sm text-slate-300">Création et Gestion des Equipements</p>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-green-600/30 text-green-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/>
+              </svg>
+            </div>
+            <p class="text-sm text-slate-300">Activation / désactivation des accès</p>
+          </div>
+          <div class="flex items-center gap-3 rounded-lg bg-white/5 px-4 py-3">
+            <div class="grid h-8 w-8 place-items-center rounded-full bg-amber-600/30 text-amber-400">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/><path stroke-linecap="round" d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <p class="text-sm text-slate-300">Mot de passe généré et envoyé par email</p>
+          </div>
+        </div>
       </div>
 
+      {# ── Formulaire de connexion ── #}
       <div class="mx-auto w-full max-w-md">
         <div class="rounded-2xl border border-slate-200 bg-white p-7 shadow-xl">
-          <h2 class="text-2xl font-bold text-slate-800">Connexion gestionnaire</h2>
+          <div class="mb-2 flex items-center gap-2 lg:hidden">
+            <div class="grid h-8 w-8 place-items-center rounded-lg bg-navy-800">
+              <svg class="h-4 w-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                <path stroke-linecap="round" d="M8 21h8M12 17v4"/>
+              </svg>
+            </div>
+            <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Gestion Utilisateurs</p>
+          </div>
+          <h2 class="text-2xl font-bold text-navy-800">Connexion</h2>
 
           {% if messages %}
-            <div class="mt-4 space-y-2">
+            <div class="mt-4 space-y-2" role="status" aria-live="polite">
               {% for message in messages %}
-                <div class="rounded-lg border px-3 py-2.5 text-sm font-medium {% if 'error' in message.tags %}border-red-200 bg-red-50 text-red-800{% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
+                <div class="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium
+                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
+                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
+                  {% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
                   {{ message }}
                 </div>
               {% endfor %}
@@ -51,15 +97,28 @@
 
           <form method="post" class="mt-5 space-y-4" novalidate>
             {% csrf_token %}
+
             <div>
               <label for="id_email" class="mb-1 block text-sm font-semibold text-slate-700">Email</label>
-              <input type="email" name="{{ form.email.name }}" id="id_email" value="{{ form.email.value|default_if_none:'' }}" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-greenBrand-500 focus:ring-2 focus:ring-emerald-100" />
+              <input type="email" name="{{ form.email.name }}" id="id_email"
+                     value="{{ form.email.value|default_if_none:'' }}"
+                     placeholder="admin@example.com"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-100" />
+              {% if form.email.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.email.errors }}</p>{% endif %}
             </div>
+
             <div>
               <label for="id_password" class="mb-1 block text-sm font-semibold text-slate-700">Mot de passe</label>
-              <input type="password" name="{{ form.password.name }}" id="id_password" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-greenBrand-500 focus:ring-2 focus:ring-emerald-100" />
+              <input type="password" name="{{ form.password.name }}" id="id_password"
+                     class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm outline-none transition focus:border-primary-500 focus:ring-2 focus:ring-blue-100" />
+              {% if form.password.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ form.password.errors }}</p>{% endif %}
             </div>
-            <button type="submit" class="flex w-full items-center justify-center gap-2 rounded-lg bg-greenBrand-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-greenBrand-700">
+
+            <button type="submit"
+                    class="flex w-full items-center justify-center gap-2 rounded-lg bg-navy-800 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-navy-900">
+              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M21 12H9"/>
+              </svg>
               Se connecter
             </button>
           </form>

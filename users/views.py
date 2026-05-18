@@ -1,5 +1,6 @@
 import secrets
 import string
+from .models import Inventaire, LigneInventaire
 from datetime import date
 from django.utils import timezone
 from functools import wraps
