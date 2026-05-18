@@ -13,6 +13,12 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 from .forms import LoginForm, RegisterUserForm, EditUserForm
 from .models import CustomUser
+from equipement.models import (
+    Classe, 
+    Emprunt, 
+    Materiel
+)
+
 
 
 def _generate_password(length: int = 12) -> str:
@@ -30,6 +36,7 @@ def _generate_password(length: int = 12) -> str:
 
 
 
+
 def admin_required(view_func):
     @wraps(view_func)
     def _wrapped(request: HttpRequest, *args, **kwargs):
@@ -39,9 +46,13 @@ def admin_required(view_func):
     return _wrapped
 
 
+
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
-        return redirect("users:dashboard")
+        if request.user.type_user == CustomUser.TypeUser.ADMIN:
+            return redirect("users:dashboard")
+        elif request.user.type_user == CustomUser.TypeUser.MANAGER:
+                return redirect("equipement:dashboard")
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -55,19 +66,21 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
             if not user or (not user.is_active) or (not user.check_password(password)):
                 messages.error(request, "Identifiants incorrects.")
-            elif user.type_user != CustomUser.TypeUser.ADMIN:
-                messages.error(request, "Seuls les administrateurs peuvent se connecter.")
             else:
                 login(request, user)
+            if request.user.type_user == CustomUser.TypeUser.ADMIN:
                 return redirect("users:dashboard")
-
+            elif request.user.type_user == CustomUser.TypeUser.MANAGER:
+                return redirect("equipement:dashboard")
     return render(request, "users/login.html", {"form": form})
+
 
 
 def logout_view(request: HttpRequest) -> HttpResponse:
     logout(request)
     messages.success(request, "Déconnexion effectuée.")
     return redirect("users:login")
+
 
 
 @login_required
@@ -77,6 +90,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
+    emprunts_en_attente = Emprunt.objects.select_related(
+        "materiel",
+        "emprunteur",
+    ).prefetch_related("lignes__materiel").filter(
+        statut=Emprunt.Statut.EN_ATTENTE
+    ).order_by("-date_emprunt")
 
     form = RegisterUserForm()
 
@@ -141,8 +160,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "form": form,
         "active_users": active_users,
         "disabled_users": disabled_users,
+        "emprunts_en_attente": emprunts_en_attente,
+        "statuts_emprunt": Emprunt.Statut.choices,
     }
     return render(request, "users/dashboard.html", context)
+
 
 
 @login_required
@@ -171,6 +193,7 @@ def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return render(request, "users/edit_user.html", {"form": form, "target": target})
 
 
+
 @require_POST
 @login_required
 @admin_required
@@ -189,6 +212,7 @@ def deactivate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return redirect(f"{reverse('users:dashboard')}?tab=disabled")
 
 
+
 @require_POST
 @login_required
 @admin_required
@@ -201,3 +225,12 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
 
     messages.success(request, "Utilisateur activé.")
     return redirect(f"{reverse('users:dashboard')}?tab=active")
+
+ 
+ 
+
+ 
+
+ 
+ 
+ 
