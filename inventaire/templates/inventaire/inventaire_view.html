@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "inventaire/base.html" %}
 
 {% block title %}Inventaire #{{ inventaire.id }} – {{ inventaire.classe.nom }}{% endblock %}
 {% block page_title %}Inventaire #{{ inventaire.id }}{% endblock %}
@@ -40,7 +40,7 @@
         <p class="mt-0.5 text-xs text-slate-400">Vue lecture seule.</p>
       </div>
       <div class="flex items-center gap-2">
-        <a href="{% url 'users:inventaire_export' inventaire.id %}"
+        <a href="{% url 'inventaire:inventaire_export' inventaire.id %}"
            class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 shadow-sm">
           <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -130,7 +130,7 @@
 
   {# ── Actions bas de page ── #}
   <div class="flex items-center gap-3">
-    <a href="{% url 'users:inventaire_list' %}"
+    <a href="{% url 'inventaire:inventaire_list' %}"
        class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-sm">
       <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 19l-7-7 7-7"/>
@@ -138,7 +138,7 @@
       Retour à la liste
     </a>
 
-    <form method="post" action="{% url 'users:inventaire_delete' inventaire.id %}"
+    <form method="post" action="{% url 'inventaire:inventaire_delete' inventaire.id %}"
           onsubmit="return confirm('Supprimer définitivement cet inventaire ?')">
       {% csrf_token %}
       <button type="submit"

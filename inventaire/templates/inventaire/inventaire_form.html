@@ -1,4 +1,4 @@
-{% extends "users/base.html" %}
+{% extends "inventaire/dashboard.html" %}
 
 {% block title %}Nouvel inventaire{% endblock %}
 {% block page_title %}Nouvel Inventaire{% endblock %}
@@ -94,7 +94,7 @@
           </svg>
           Lancer l'inventaire
         </button>
-        <a href="{% url 'users:inventaire_list' %}" class="text-sm font-medium text-slate-500 hover:text-slate-700">
+        <a href="{% url 'users:dashboard' %}?tab=inventaires" class="text-sm font-medium text-slate-500 hover:text-slate-700">
           Annuler
         </a>
       </div>

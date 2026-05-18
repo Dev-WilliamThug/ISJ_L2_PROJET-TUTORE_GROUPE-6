@@ -78,7 +78,11 @@
             Liste des equipements
           </a>
           <a href="?tab=register" class="nav-link {% if tab == 'register' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="8.5" cy="7" r="4"/>
+                <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
+            </svg>
             Ajouter un emprunteur
           </a>
           <a href="?tab=lister_emprunteurs" class="nav-link {% if tab == 'lister_emprunteurs' %}active{% endif %}">
@@ -92,10 +96,6 @@
           <a href="?tab=lister_emprunts" class="nav-link {% if tab == 'lister_emprunts' %}active{% endif %}">
                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Lister des emprunts effectifs
-          </a>
-          <a href="?tab=creer_invetaire" class="nav-link {% if tab == 'creer_emprunt' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
-            Etablir un inventaire
           </a>
           <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
