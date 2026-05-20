@@ -14,7 +14,7 @@ from openpyxl.styles import Font, PatternFill
 from users.forms import LoginForm
 from users.models import CustomUser
 from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
-from .models import Materiel, Tierce, Emprunt, LigneEmprunt
+from .models import Materiel,Classe,Tierce, Emprunt, LigneEmprunt
 
 
 def manager_required(view_func):
@@ -149,11 +149,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     emprunteurs = Tierce.objects.all()
     materiels = Materiel.objects.all()
-    emprunts = Emprunt.objects.select_related(
+    emprunts = Emprunt.objects.filter(statut=Emprunt.Statut.APPROUVE).select_related(
         "materiel",
         "emprunteur",
     ).prefetch_related("lignes__materiel").order_by("-date_emprunt")
-
+    classes = Classe.objects.all()
   
     categorie_filtre = request.GET.get("categorie", "")
     if categorie_filtre:
@@ -187,6 +187,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "formEmprunteur": formEmprunteur,
         "formEmprunt": formEmprunt,
         "materiels": materiels,
+        "classes":classes,
         "materiels_recents": materiels_recents,
         "materiels_disponibles": materiels_disponibles,
         "materiel_detail": materiel_detail,
@@ -232,7 +233,7 @@ def modifier_statut_emprunt(request: HttpRequest, emprunt_id: int) -> HttpRespon
         emprunt.statut = nouveau_statut
         if nouveau_statut == Emprunt.Statut.RETOURNE:
             emprunt.date_retour_effective = timezone.localdate()
-        elif nouveau_statut == Emprunt.Statut.EN_COURS:
+        elif nouveau_statut == Emprunt.Statut.APPROUVE:
             emprunt.date_retour_effective = None
         emprunt.save(update_fields=["statut", "date_retour_effective"])
 
@@ -243,7 +244,7 @@ def modifier_statut_emprunt(request: HttpRequest, emprunt_id: int) -> HttpRespon
         if nouveau_statut == Emprunt.Statut.RETOURNE:
             for materiel in materiels:
                 materiel.retourner()
-        elif nouveau_statut == Emprunt.Statut.EN_COURS:
+        elif nouveau_statut == Emprunt.Statut.APPROUVE:
             for materiel in materiels:
                 materiel.etat = "EN PRET"
                 materiel.save(update_fields=["etat"])
@@ -267,9 +268,9 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
             if timezone.is_naive(date_emprunt):
                 date_emprunt = timezone.make_aware(date_emprunt)
 
-            statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.EN_ATTENTE
+            statut = Emprunt.Statut.APPROUVE if date_emprunt <= now else Emprunt.Statut.EN_ATTENTE
 
-            if statut == Emprunt.Statut.EN_COURS:
+            if statut == Emprunt.Statut.APPROUVE:
                 indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
                 if indisponibles:
                     noms = ", ".join(m.nom for m in indisponibles)
@@ -287,14 +288,14 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
 
             for materiel in materiels_choisis:
                 LigneEmprunt.objects.create(emprunt=emprunt, materiel=materiel)
-                if statut == Emprunt.Statut.EN_COURS:
+                if statut == Emprunt.Statut.APPROUVE:
                     materiel.mettre_en_pret()
 
             messages.success(
                 request,
                 f"Emprunt enregistré avec succès ({len(materiels_choisis)} équipement(s), statut : {emprunt.get_statut_display()})."
             )
-            return redirect(f"{reverse('equipement:dashboard')}?tab=home")
+            return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
 
         messages.error(request, "Erreur dans le formulaire.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
@@ -462,7 +463,7 @@ def import_emprunts(request):
         date_emprunt   = row[3]  
         retour_prevu   = row[4]
         notes          = row[5]
-        statut         = row[6] if len(row) > 6 else "EN_COURS"
+        statut         = row[6] if len(row) > 6 else "APPROUVE"
 
         if not noms_materiels or not nom_emprunteur:
             erreurs.append(f"Ligne {i} : matériel ou emprunteur vide")
@@ -489,7 +490,7 @@ def import_emprunts(request):
 
         statut = statut.upper().strip()
         if statut not in valeurs_valides:
-            statut = "EN_COURS"
+            statut ="APPROUVE"
 
         parties = nom_emprunteur.strip().split()
         emprunteur_obj = None

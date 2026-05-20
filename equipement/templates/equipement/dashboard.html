@@ -189,6 +189,7 @@
             {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
           </div>
         {% endfor %}
+
         <div class="sm:col-span-2">
           <button class="btn-primary" type="submit">Enregistrer l'emprunteur</button>
         </div>
@@ -211,6 +212,7 @@
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Prenom</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Email</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Type</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Classe</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
             </tr>
           </thead>
@@ -222,6 +224,7 @@
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.prenom }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.email }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.type_Tierce }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.classe }}</td>
                 <td class="px-5 py-3">
                   <div class="flex flex-wrap items-center gap-2">
                     <a href="{% url 'equipement:detail_emprunteur' emprunteur.id_Tierce %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
@@ -247,7 +250,7 @@
       <h2 class="text-lg font-bold text-slate-800">Details de l'emprunteur</h2>
       {% if emprunteur_detail %}
         <div class="mt-4 grid gap-4 sm:grid-cols-2">
-          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">ID</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.id_Tierce }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">CLASSE</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.classe }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Type</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.type_Tierce }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.nom }}</p></div>
           <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Prenom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.prenom }}</p></div>

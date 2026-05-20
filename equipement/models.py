@@ -60,7 +60,22 @@ class Materiel(models.Model):
     def __str__(self):
         return f"{self.nom} ({self.id_materiel})"
 
-
+class Classe(models.Model):
+    
+    nom = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    nombre_places = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+ 
+    class Meta:
+        ordering = ['nom']
+        verbose_name = "Classe"
+        verbose_name_plural = "Classes"
+ 
+    def __str__(self):
+        return self.nom
+    
 class Tierce(models.Model):
     
     class TypeTierce(models.TextChoices):
@@ -82,6 +97,7 @@ class Tierce(models.Model):
         default=TypeTierce.ETUDIANT,
         verbose_name="Type",
     )
+    classe=models.ForeignKey(Classe, on_delete=models.PROTECT, null=True, blank=True)
     def get_full_name(self) -> str:
         return f"{self.prenom} {self.nom}".strip()
 
@@ -95,22 +111,7 @@ class Tierce(models.Model):
     def __str__(self):
         return self.get_full_name()
 
-class Classe(models.Model):
-    
-    nom = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True)
-    nombre_places = models.IntegerField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
- 
-    class Meta:
-        ordering = ['nom']
-        verbose_name = "Classe"
-        verbose_name_plural = "Classes"
- 
-    def __str__(self):
-        return self.nom
-    
+
 class Emprunt(models.Model):
  
     

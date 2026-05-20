@@ -86,8 +86,8 @@ def logout_view(request: HttpRequest) -> HttpResponse:
 @login_required
 @admin_required
 def dashboard(request: HttpRequest) -> HttpResponse:
-    tab = request.GET.get("tab", "home")
 
+    tab = request.GET.get("tab", "home")
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
     emprunts_en_attente = Emprunt.objects.select_related(
@@ -227,10 +227,19 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return redirect(f"{reverse('users:dashboard')}?tab=active")
 
  
+def validate_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+    emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
+    emprunt.statut = Emprunt.Statut.APPROUVE
+    emprunt.save(update_fields=["statut"])
+    messages.success(request, "Emprunt validé.")
+    return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
  
 
- 
-
- 
+def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+    emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
+    emprunt.statut = Emprunt.Statut.REFUSE
+    emprunt.save(update_fields=["statut"])
+    messages.success(request, "Emprunt refusé.")
+    return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
  
  
