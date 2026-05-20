@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from openpyxl.styles import Font, PatternFill
-
+from django.db.models import Q
 from users.forms import LoginForm
 from users.models import CustomUser
 from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
@@ -149,7 +149,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 
     emprunteurs = Tierce.objects.all()
     materiels = Materiel.objects.all()
-    emprunts = Emprunt.objects.filter(statut=Emprunt.Statut.APPROUVE).select_related(
+    emprunts = Emprunt.objects.filter(Q(statut=Emprunt.Statut.APPROUVE) | Q(statut=Emprunt.Statut.REFUSE)).select_related(
         "materiel",
         "emprunteur",
     ).prefetch_related("lignes__materiel").order_by("-date_emprunt")
@@ -220,40 +220,6 @@ def retirer_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
-@require_POST
-def modifier_statut_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
-    emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
-    nouveau_statut = request.POST.get("statut")
-    source = request.POST.get("source", "equipement")
-    statuts_valides = [statut for statut, _ in Emprunt.Statut.choices]
-
-    if nouveau_statut not in statuts_valides:
-        messages.error(request, "Statut invalide.")
-    else:
-        emprunt.statut = nouveau_statut
-        if nouveau_statut == Emprunt.Statut.RETOURNE:
-            emprunt.date_retour_effective = timezone.localdate()
-        elif nouveau_statut == Emprunt.Statut.APPROUVE:
-            emprunt.date_retour_effective = None
-        emprunt.save(update_fields=["statut", "date_retour_effective"])
-
-        materiels = [ligne.materiel for ligne in emprunt.lignes.all()]
-        if not materiels and emprunt.materiel_id:
-            materiels = [emprunt.materiel]
-
-        if nouveau_statut == Emprunt.Statut.RETOURNE:
-            for materiel in materiels:
-                materiel.retourner()
-        elif nouveau_statut == Emprunt.Statut.APPROUVE:
-            for materiel in materiels:
-                materiel.etat = "EN PRET"
-                materiel.save(update_fields=["etat"])
-
-        messages.success(request, "Statut de l'emprunt modifie avec succes.")
-
-    if source == "admin":
-        return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
 
 
 @login_required
