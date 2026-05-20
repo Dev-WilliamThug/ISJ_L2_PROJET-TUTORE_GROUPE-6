@@ -249,6 +249,7 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                 date_emprunt=date_emprunt,
                 date_retour_prevue=form.cleaned_data["date_retour_prevue"],
                 statut=statut,
+                classe=form.cleaned_data["emprunteur"].get_classe(),
                 notes=form.cleaned_data["notes"],
             )
 

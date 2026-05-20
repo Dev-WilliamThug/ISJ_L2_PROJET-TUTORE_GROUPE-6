@@ -56,7 +56,10 @@ class Materiel(models.Model):
     def retourner(self) -> None:
         self.etat = "DISPONIBLE"
         self.save()
-
+    @property
+    def nb_materiels_total(self) -> int:
+        return self.count()
+    
     def __str__(self):
         return f"{self.nom} ({self.id_materiel})"
 
@@ -98,6 +101,9 @@ class Tierce(models.Model):
         verbose_name="Type",
     )
     classe=models.ForeignKey(Classe, on_delete=models.PROTECT, null=True, blank=True)
+    def get_classe(self)-> str:
+        return self.classe if self.classe else "Aucune classe associée"
+    
     def get_full_name(self) -> str:
         return f"{self.prenom} {self.nom}".strip()
 
