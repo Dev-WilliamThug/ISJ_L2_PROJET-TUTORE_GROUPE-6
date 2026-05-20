@@ -1,0 +1,451 @@
+{% extends "equipement/base.html" %}
+
+{% block title %}Dashboard Gestionnaire - Equipement{% endblock %}
+{% block page_title %}Tableau de bord gestionnaire{% endblock %}
+
+{% block content %}
+  {% if tab == 'home' %}
+    <section class="space-y-6">
+      <div class="grid gap-4 sm:grid-cols-2">
+        <article class="rounded-xl bg-greenBrand-600 p-5 text-white shadow-soft">
+          <p class="text-sm font-medium text-emerald-100">Total equipements</p>
+          <p class="mt-1 text-4xl font-bold">{{ materiels|length }}</p>
+        </article>
+        <article class="rounded-xl border border-emerald-100 bg-white p-5 shadow-soft">
+          <p class="text-sm font-medium text-slate-500">Disponibles</p>
+          <p class="mt-1 text-4xl font-bold text-greenBrand-700">{{ materiels_disponibles|length }}</p>
+        </article>
+      </div>
+      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-bold text-slate-800">Actions rapides</h2>
+        <div class="mt-4 grid gap-3 sm:grid-cols-2">
+          <a href="?tab=add" class="btn-primary justify-center">Ajouter equipement</a>
+          <a href="?tab=list" class="btn-secondary justify-center">Lister equipements</a>
+          <a href="?tab=par_categorie" class="btn-secondary justify-center">Par catégorie</a>
+          <a href="?tab=register" class="btn-secondary justify-center">Ajouter emprunteur</a>
+          <a href="?tab=lister_emprunteurs" class="btn-secondary justify-center">Lister emprunteurs</a>
+          <a href="?tab=lister_emprunts" class="btn-secondary justify-center">Lister emprunts</a>
+          <a href="?tab=import" class="btn-secondary justify-center sm:col-span-2">Importer Excel</a>
+        </div>
+      </section>
+    </section>
+  {% endif %}
+
+  {% if tab == 'add' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un equipement</h2>
+      <form class="grid gap-4 sm:grid-cols-2" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="register_materiel" />
+        {% for field in formMateriel %}
+          <div class="{% if field.name == 'id_materiel' %}sm:col-span-2{% endif %}">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+        <div class="sm:col-span-2">
+          <button class="btn-primary" type="submit">Enregistrer l'equipement</button>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+
+  {% if tab == 'list' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-slate-800">Liste des equipements</h2>
+        <div class="flex gap-2">
+          <a href="?tab=add" class="btn-primary">Ajouter</a>
+          <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
+        </div>
+      </div>
+      
+      <div class="border-b border-slate-100 px-6 py-3 flex flex-wrap gap-2 items-center">
+        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrer :</span>
+        <a href="?tab=list" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+          {% if not categorie_filtre %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+          Tout
+        </a>
+        {% for valeur, label in categories %}
+          <a href="?tab=list&categorie={{ valeur }}" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+            {% if categorie_filtre == valeur %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
+            {{ label }}
+          </a>
+        {% endfor %}
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Code</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Etat</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for equipement in materiels %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_categorie_display }}</td>
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}</td>
+                <td class="px-5 py-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'equipement:detail_materiel' equipement.id_materiel %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
+                    <a href="{% url 'equipement:edit_equipement' equipement.id_materiel %}" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
+                    <form method="post" action="{% url 'equipement:retirer_materiel' equipement.id_materiel %}">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('Confirmer la suppression de cet equipement ?');" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500">
+                Aucun equipement {% if categorie_filtre %}dans cette catégorie{% else %}enregistre{% endif %}.
+              </td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+ 
+  {% if tab == 'par_categorie' %}
+    <section class="space-y-6">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-bold text-slate-800">Equipements par catégorie</h2>
+        <a href="?tab=list" class="btn-secondary">Vue liste</a>
+      </div>
+      {% for valeur, label in categories %}
+        <div class="rounded-xl border border-slate-200 bg-white shadow-soft overflow-hidden">
+          <div class="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-6 py-3">
+            <h3 class="font-semibold text-slate-700">{{ label }}</h3>
+            <a href="?tab=list&categorie={{ valeur }}" class="text-xs text-greenBrand-600 font-semibold hover:underline">Voir tout →</a>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-100">
+              <thead class="bg-white">
+                <tr>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Code</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Nom</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Etat</th>
+                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Marque</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                {% for eq in materiels %}
+                  {% if eq.categorie == valeur %}
+                    <tr class="hover:bg-slate-50">
+                      <td class="px-5 py-2 text-sm font-semibold text-slate-700">{{ eq.id_materiel }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-700">{{ eq.nom }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-600">{{ eq.get_etat_display }}</td>
+                      <td class="px-5 py-2 text-sm text-slate-600">{{ eq.marque }}</td>
+                    </tr>
+                  {% endif %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endfor %}
+    </section>
+  {% endif %}
+
+  {% if tab == 'detail' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Details de l'equipement</h2>
+      {% if materiel_detail %}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Code</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.id_materiel }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Etat</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.get_etat_display }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.nom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Categorie</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.get_categorie_display }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Couleur</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.couleur }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Marque</p><p class="mt-1 font-semibold text-slate-800">{{ materiel_detail.marque }}</p></div>
+        </div>
+      {% else %}
+        <p class="mt-4 text-sm text-slate-500">Aucun equipement selectionne.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if tab == 'register' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un emprunteur</h2>
+      <form class="grid gap-4 sm:grid-cols-2" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="register_emprunteur" />
+        {% for field in formEmprunteur %}
+          <div class="{% if field.name == 'id_Tierce' or field.name == 'email' %}sm:col-span-2{% endif %}">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">{{ field.label }}</label>
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>{% endif %}
+            {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+
+        <div class="sm:col-span-2">
+          <button class="btn-primary" type="submit">Enregistrer l'emprunteur</button>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+
+  {% if tab == 'lister_emprunteurs' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-slate-800">Liste des emprunteurs</h2>
+        <a href="?tab=register" class="btn-primary">Ajouter</a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">ID</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Prenom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Email</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Type</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Classe</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for emprunteur in emprunteurs %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ emprunteur.id_Tierce }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.prenom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.email }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.type_Tierce }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunteur.classe }}</td>
+                <td class="px-5 py-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'equipement:detail_emprunteur' emprunteur.id_Tierce %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
+                    <a href="{% url 'equipement:edit_emprunteur' emprunteur.id_Tierce%}" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
+                    <form method="post" action="{% url 'equipement:retirer_emprunteur' emprunteur.id_Tierce %}">
+                      {% csrf_token %}
+                      <button type="submit" onclick="return confirm('Confirmer la suppression de cet emprunteur ?');" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunteur enregistre.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if tab == 'detail_emprunteur' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Details de l'emprunteur</h2>
+      {% if emprunteur_detail %}
+        <div class="mt-4 grid gap-4 sm:grid-cols-2">
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">CLASSE</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.classe }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Type</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.type_Tierce }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Nom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.nom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4"><p class="text-xs uppercase text-slate-500">Prenom</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.prenom }}</p></div>
+          <div class="rounded-lg border border-slate-200 p-4 sm:col-span-2"><p class="text-xs uppercase text-slate-500">Email</p><p class="mt-1 font-semibold text-slate-800">{{ emprunteur_detail.email }}</p></div>
+        </div>
+      {% else %}
+        <p class="mt-4 text-sm text-slate-500">Aucun emprunteur selectionne.</p>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if tab == 'creer_emprunt' %}
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="mb-4 text-lg font-bold text-slate-800">Créer un emprunt</h2>
+      <form class="space-y-5" method="post" action="{% url 'equipement:enregistrer_emprunt' %}">
+        {% csrf_token %}
+
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Date d'emprunt</label>
+          <input type="datetime-local" name="date_emprunt" value="{{ formEmprunt.date_emprunt.value|default:'' }}" required class="field w-full" />
+          {% for error in formEmprunt.date_emprunt.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Emprunteur</label>
+          <select name="emprunteur" required class="field w-full">
+            <option value="">— Choisir un emprunteur —</option>
+            {% for e in emprunteurs %}
+            <option value="{{ e.id_Tierce }}">{{ e.prenom }} {{ e.nom }} — {{ e.id_Tierce }}</option>
+            {% empty %}
+            <option disabled>Aucun emprunteur enregistré</option>
+            {% endfor %}
+          </select>
+          {% for error in formEmprunt.emprunteur.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">
+            Équipements disponibles
+            <span class="ml-1 text-xs font-normal text-slate-400">(maintenez Ctrl pour en sélectionner plusieurs)</span>
+          </label>
+          {% if materiels_disponibles %}
+            <select name="materiels" multiple required class="field w-full rounded-lg border border-slate-200 p-2 text-sm text-slate-700 focus:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-100" style="min-height: 160px;">
+              {% for m in materiels_disponibles %}
+              <option value="{{ m.id_materiel }}">{{ m.nom }} — {{ m.id_materiel }}</option>
+              {% endfor %}
+            </select>
+            <p class="mt-1 text-xs text-slate-400">{{ materiels_disponibles|length }} équipement(s) disponible(s)</p>
+          {% else %}
+            <p class="rounded-lg border border-slate-200 p-4 text-sm text-slate-500">Aucun équipement disponible.</p>
+          {% endif %}
+          {% for error in formEmprunt.materiels.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">Date de retour prévue</label>
+          <input type="date" name="date_retour_prevue" required class="field w-full" />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-sm font-semibold text-slate-700">
+            Notes <span class="font-normal text-slate-400">(optionnel)</span>
+          </label>
+          <textarea name="notes" rows="3" class="field w-full resize-none" placeholder="Observations, conditions particulières..."></textarea>
+        </div>
+
+        <div id="statut-preview" class="hidden rounded-lg border p-3 text-sm font-medium"></div>
+
+        <div>
+          <button class="btn-primary w-full sm:w-auto" type="submit">Enregistrer l'emprunt</button>
+        </div>
+      </form>
+    </section>
+
+    <script>
+      (function () {
+        const input = document.querySelector('input[name="date_emprunt"]');
+        const preview = document.getElementById('statut-preview');
+        if (!input.value) {
+          const now = new Date();
+          now.setSeconds(0, 0);
+          input.value = now.toISOString().slice(0, 16);
+        }
+        input.addEventListener('change', updatePreview);
+        updatePreview();
+      })();
+    </script>
+  {% endif %}
+
+  {% if tab == 'lister_emprunts' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-slate-800">Liste des emprunts</h2>
+           <div class="flex gap-2">
+        <a href="?tab=creer_emprunt" class="btn-primary">Ajouter</a>
+        <a href="{% url 'equipement:exporter_template_emprunts' %}" class="btn-secondary">Exporter</a>
+      </div>
+       </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">ID</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Materiel</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Emprunteur</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Date d'emprunt</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Retour prevu</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Statut</th>
+                              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for emprunt in emprunts %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ emprunt.id }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">
+                  {% if emprunt.lignes.all %}
+                    <div class="space-y-1">
+                      {% for ligne in emprunt.lignes.all %}
+                        <div>{{ ligne.materiel }}</div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    {{ emprunt.materiel }}
+                  {% endif %}
+                </td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_emprunt }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_retour_prevue }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">
+                  <details class="group">
+                    <summary class="inline-flex cursor-pointer list-none items-center rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 transition hover:bg-emerald-100">
+                      {{ emprunt.get_statut_display }}
+                    </summary>
+                    <div class="fixed inset-0 z-40 grid place-items-center bg-slate-900/30 px-4">
+                      <form method="post" action="{% url 'equipement:modifier_statut_emprunt' emprunt.id %}" class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+                        {% csrf_token %}
+                        <input type="hidden" name="source" value="equipement" />
+                        <div class="mb-4">
+                          <h3 class="text-base font-bold text-slate-800">Changer le statut</h3>
+                          <p class="mt-1 text-sm text-slate-500">Emprunt #{{ emprunt.id }} - {{ emprunt.emprunteur }}</p>
+                        </div>
+                        <label class="mb-1 block text-sm font-semibold text-slate-700">Nouveau statut</label>
+                        <select name="statut" class="field">
+                          {% for value, label in statuts_emprunt %}
+                            <option value="{{ value }}" {% if emprunt.statut == value %}selected{% endif %}>{{ label }}</option>
+                          {% endfor %}
+                        </select>
+                        <div class="mt-5 flex justify-end gap-2">
+                          <button type="button" onclick="this.closest('details').removeAttribute('open')" class="btn-secondary px-3 py-2">Annuler</button>
+                          <button type="submit" class="btn-primary px-3 py-2">Modifier</button>
+                        </div>
+                      </form>
+                    </div>
+                  </details>
+                </td>
+
+  <td class="px-5 py-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <a href="{% url 'equipement:modifier_emprunt' emprunt.id %}" class="btn-primary px-3 py-1.5 text-xs">Modifier</a>
+                        {% csrf_token %}
+                        <button type="submit" onclick="return confirm('Confirmer la suppression de cet emprunteur ?');" class="inline-flex items-center rounded-lg bg-red-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>                  </div>
+                  </td>
+
+              </tr>
+            {% empty %}
+              <tr><td colspan="6" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunt enregistre.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+  {% if tab == 'import' %}
+  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>
+      <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel, nom, couleur, categorie, etat, marque.</p>
+      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_materiels' %}">
+        {% csrf_token %}
+        <input class="field" type="file" name="file" accept=".xlsx" required />
+        <button type="submit" class="btn-primary">Importer maintenant</button>
+      </form>
+    </section>
+     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+      <h2 class="text-lg font-bold text-slate-800">Importer facilements les emprunts (Excel)</h2>
+      <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel,id_emprunteur ,  date_emprunt,   retour_prevu, statut, note.</p>
+      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_emprunts' %}">
+        {% csrf_token %}
+        <input class="field" type="file" name="file" accept=".xlsx" required />
+        <button type="submit" class="btn-primary">Importer</button>
+      </form>
+    </section>
+  </div>
+  {% endif %}
+{% endblock %}
