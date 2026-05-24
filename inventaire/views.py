@@ -10,6 +10,7 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+from django.db.models import Q, Count
 from equipement.models import (
     Classe, 
     Emprunt, 
@@ -93,9 +94,7 @@ def inventaire_list(request):
 @login_required
 @admin_required
 def inventaire_form(request):
-    """
-    Formulaire pour sélectionner une classe et une date d'inventaire.
-    """
+    
     classes = Classe.objects.all()
     
     if request.method == "POST":

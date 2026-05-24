@@ -91,11 +91,11 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
     emprunts_en_attente = Emprunt.objects.select_related(
-        "materiel",
+        "materiels",
         "emprunteur",
     ).prefetch_related("lignes__materiel").filter(
         statut=Emprunt.Statut.EN_ATTENTE
-    ).order_by("-date_emprunt")
+    ).order_by("-date_operation")
 
     form = RegisterUserForm()
 

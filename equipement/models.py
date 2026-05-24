@@ -29,7 +29,7 @@ class Materiel(models.Model):
     id_materiel = models.CharField(max_length=50, primary_key=True, verbose_name="Identifiant")
     nom = models.CharField(max_length=100)
     couleur = models.CharField(max_length=30)
-    
+    numero_serie=models.CharField(max_length=30)
     categorie = models.CharField(
         max_length=50,
         choices=Categorie.choices,
@@ -44,9 +44,22 @@ class Materiel(models.Model):
     )
     marque = models.CharField(max_length=50)
 
+    
+    def est_en_pret(self) -> bool:
+        return self.etat == "EN PRET"
+    
+    def est_deffectueux(self) -> bool:
+        return self.etat == "DEFECTUEUX"
+    
+    def est_en_maintenance(self) -> bool:
+        return self.etat == "EN MAINTENANCE"
+    
+    def est_hors_service(self) -> bool:
+        return self.etat == "HORS SERVICE"
+
     def est_disponible(self) -> bool:
         return self.etat == "DISPONIBLE"
-
+    
     def mettre_en_pret(self) -> None:
         if not self.est_disponible():
             raise ValueError(f"Le matériel {self.nom} n'est pas disponible.")
@@ -56,10 +69,7 @@ class Materiel(models.Model):
     def retourner(self) -> None:
         self.etat = "DISPONIBLE"
         self.save()
-    @property
-    def nb_materiels_total(self) -> int:
-        return self.count()
-    
+
     def __str__(self):
         return f"{self.nom} ({self.id_materiel})"
 
@@ -101,6 +111,7 @@ class Tierce(models.Model):
         verbose_name="Type",
     )
     classe=models.ForeignKey(Classe, on_delete=models.PROTECT, null=True, blank=True)
+
     def get_classe(self)-> str:
         return self.classe if self.classe else "Aucune classe associée"
     
@@ -110,22 +121,29 @@ class Tierce(models.Model):
     def est_etudiant(self) -> bool:
         return self.type_Tierce == self.TypeTierce.ETUDIANT
 
-    @property
-    def nb_emprunts_en_cours(self) -> int:
-        return self.emprunts.filter(statut="EN_COURS").count()
-
     def __str__(self):
         return self.get_full_name()
 
-
-class Emprunt(models.Model):
- 
+class Operation(models.Model):
     
     class TypeOperation(models.TextChoices):
         ENTREE = "entree", _("Entrée (enregistrement)")
         SORTIE = "sortie", _("Sortie (planifiée)")
         EMPRUNT = "emprunt", _("Emprunt")
- 
+
+
+    materiels = models.ForeignKey("Materiel", on_delete=models.CASCADE, related_name="emprunts")
+    date_operation = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True)
+    type_operation = models.CharField(
+        max_length=30,
+        choices=TypeOperation.choices,
+        default=TypeOperation.EMPRUNT,
+        verbose_name="Type d'opération",
+    )
+
+class Emprunt(Operation):
+
     class Statut(models.TextChoices):
         EN_ATTENTE = "en_attente", _("En attente")
         APPROUVE = "approuve", _("Approuvé")
@@ -133,10 +151,8 @@ class Emprunt(models.Model):
         RETOURNE = "retourne", _("Retourné")
  
     # Champs existants (à conserver)
-    materiel = models.ForeignKey("Materiel", on_delete=models.CASCADE, related_name="emprunts")
     emprunteur = models.ForeignKey("equipement.Tierce", on_delete=models.CASCADE)
     classe = models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, blank=True)
-    date_emprunt = models.DateTimeField(auto_now_add=True)
     date_retour_prevue = models.DateField(null=True, blank=True)
     date_retour_reelle = models.DateField(null=True, blank=True)
     statut = models.CharField(
@@ -144,20 +160,11 @@ class Emprunt(models.Model):
         choices=Statut.choices,
         default=Statut.EN_ATTENTE
     )
-    
-   
-    type_operation = models.CharField(
-        max_length=20,
-        choices=TypeOperation.choices,
-        default=TypeOperation.EMPRUNT
-    )
-    
-    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
  
     class Meta:
-        ordering = ['-date_emprunt']
+        ordering = ['-date_operation']
         verbose_name = "Emprunt"
         verbose_name_plural = "Emprunts"
  

@@ -2,7 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from equipement.models import Materiel,Tierce,Emprunt,Classe 
+from equipement.models import Materiel,Tierce,Operation,Emprunt,Classe 
 
 
 
