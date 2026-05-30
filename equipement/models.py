@@ -150,7 +150,7 @@ class Emprunt(Operation):
         REFUSE = "refuse", _("Refusé")
         RETOURNE = "retourne", _("Retourné")
  
-    # Champs existants (à conserver)
+
     emprunteur = models.ForeignKey("equipement.Tierce", on_delete=models.CASCADE)
     classe = models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, blank=True)
     date_retour_prevue = models.DateField(null=True, blank=True)
