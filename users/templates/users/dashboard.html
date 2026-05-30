@@ -20,7 +20,7 @@
   {% endif %}
 
   {# ════════════════════════════════════════ HOME ════════════════════════════════════════ #}
-  {% if tab == 'home' %}
+  {% if tab == 'dashboard' %}
     <section class="space-y-6">
 
       {# ── Cartes de stats ── #}
@@ -100,7 +100,7 @@
           Gérez les utilisateurs, consultez les emprunts en attente et réalisez vos inventaires de stock.
         </p>
         <div class="mt-5 flex flex-wrap gap-3">
-          <a href="?tab=register" class="btn-primary">
+          <a href="?tab=utilisateur/enregistrer" class="btn-primary">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="8.5" cy="7" r="4"/>
@@ -108,14 +108,14 @@
             </svg>
             Nouveau utilisateur
           </a>
-          <a href="?tab=active" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-sm">
+          <a href="?tab=utilisateur/actifs" class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-sm">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
               <circle cx="9" cy="7" r="4"/>
             </svg>
             Voir les utilisateurs
           </a>
-          <a href="?tab=listeemprunts" class="inline-flex items-center gap-2 rounded-lg border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-100 shadow-sm">
+          <a href="?tab=emprunts" class="inline-flex items-center gap-2 rounded-lg border border-teal-300 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-700 transition hover:bg-teal-100 shadow-sm">
             <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/>
               <rect x="9" y="3" width="6" height="4" rx="1"/>
@@ -141,7 +141,7 @@
   {% endif %}
 
   {# ════════════════════════════════════════ REGISTER ════════════════════════════════════════ #}
-  {% if tab == 'register' %}
+  {% if tab == 'utilisateur/enregistrer' %}
     <section class="mx-auto max-w-2xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <div class="mb-5 border-b border-slate-100 pb-4">
         <h2 class="text-lg font-bold text-navy-800">Enregistrer un utilisateur</h2>
@@ -204,7 +204,7 @@
   {% endif %}
 
   {# ════════════════════════════════════════ UTILISATEURS ACTIFS ════════════════════════════════════════ #}
-  {% if tab == 'active' %}
+  {% if tab == 'utilisateur/actifs' %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-navy-800">Utilisateurs actifs</h2>
@@ -268,7 +268,7 @@
   {% endif %}
 
   {# ════════════════════════════════════════ UTILISATEURS DÉSACTIVÉS ════════════════════════════════════════ #}
-  {% if tab == 'disabled' %}
+  {% if tab == 'utilisateur/desactives' %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-navy-800">Utilisateurs désactivés</h2>
@@ -318,8 +318,7 @@
     </section>
   {% endif %}
 
-  {# ════════════════════════════════════════ EMPRUNTS EN ATTENTE ════════════════════════════════════════ #}
-  {% if tab == 'listeemprunts' %}
+  {% if tab == 'emprunts' %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des emprunts en attente</h2>
@@ -335,6 +334,7 @@
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Date d'emprunt</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Retour prévu</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Statut</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -349,41 +349,24 @@
                       {% endfor %}
                     </div>
                   {% else %}
-                    {{ emprunt.materiel }}
+                    {{ emprunt.materiels }}
                   {% endif %}
                 </td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_emprunt }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_retour_prevue }}</td>
-                <td class="px-5 py-3 text-sm text-slate-700">
-                  <details class="group">
-                    <summary class="inline-flex cursor-pointer list-none items-center rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:bg-blue-100">
-                      {{ emprunt.get_statut_display }}
-                    </summary>
-                    <div class="fixed inset-0 z-40 grid place-items-center bg-slate-900/30 px-4">
-                      <form method="post" action="{% url 'equipement:modifier_statut_emprunt' emprunt.id %}" class="w-full max-w-sm rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-                        {% csrf_token %}
-                        <input type="hidden" name="source" value="admin" />
-                        <div class="mb-4">
-                          <h3 class="text-base font-bold text-slate-800">Changer le statut</h3>
-                          <p class="mt-1 text-sm text-slate-500">Emprunt #{{ emprunt.id }} – {{ emprunt.emprunteur }}</p>
-                        </div>
-                        <label class="mb-1 block text-sm font-semibold text-slate-700">Nouveau statut</label>
-                        <select name="statut" class="form-select">
-                          {% for value, label in statuts_emprunt %}
-                            <option value="{{ value }}" {% if emprunt.statut == value %}selected{% endif %}>{{ label }}</option>
-                          {% endfor %}
-                        </select>
-                        <div class="mt-5 flex justify-end gap-2">
-                          <button type="button" onclick="this.closest('details').removeAttribute('open')"
-                                  class="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
-                            Annuler
-                          </button>
-                          <button type="submit" class="btn-primary px-3 py-2">Modifier</button>
-                        </div>
-                      </form>
-                    </div>
-                  </details>
+                <td class="px-5 py-3 text-sm text-slate-800 font-bold text-primary-600">{{ emprunt.get_statut_display }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700 flex items-center gap-3">
+                  <a href= "{% url 'users:validate_emprunt' emprunt_id=emprunt.id %}" class="inline-flex items-center gap-1 rounded-lg border border-green-200 bg-green-50 px-2.5 py-1.5 text-xs font-semibold text-green-700 transition hover:bg-green-100 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke-width="2" class="size-6">
+                      <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+                    </svg>
+                  </a>
+                  <a href= "{% url 'users:refuser_emprunt' emprunt_id=emprunt.id %}" class="inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke-width="2" class="size-6">
+                      <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+                    </svg>
+                  </a>
                 </td>
               </tr>
             {% empty %}

@@ -10,11 +10,11 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 from openpyxl.styles import Font, PatternFill
-
+from django.db.models import Q
 from users.forms import LoginForm
 from users.models import CustomUser
 from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
-from .models import Materiel, Tierce, Emprunt, LigneEmprunt
+from .models import Materiel,Classe,Tierce, Emprunt, LigneEmprunt,Operation
 
 
 def manager_required(view_func):
@@ -148,23 +148,25 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     emprunteur_detail = None
 
     emprunteurs = Tierce.objects.all()
-    materiels = Materiel.objects.all()
-    emprunts = Emprunt.objects.select_related(
-        "materiel",
+    materiels_total = Materiel.objects.all()
+    emprunts = Emprunt.objects.filter(Q(statut=Emprunt.Statut.APPROUVE) | Q(statut=Emprunt.Statut.REFUSE)).select_related(
+        "materiels",
         "emprunteur",
-    ).prefetch_related("lignes__materiel").order_by("-date_emprunt")
-
+    ).prefetch_related("lignes__materiel").order_by("-date_operation")
+    classes = Classe.objects.all()
   
     categorie_filtre = request.GET.get("categorie", "")
     if categorie_filtre:
-        materiels = materiels.filter(categorie=categorie_filtre)
+        materiels_total = materiels_total.filter(categorie=categorie_filtre)
 
     
     categories = Materiel.Categorie.choices
 
     materiels_recents = Materiel.objects.order_by("-id_materiel")[:5]
-    materiels_disponibles = Materiel.objects.filter(etat="DISPONIBLE")
-
+    emprunt_recents = Emprunt.objects.order_by("-date_operation")[:5]
+    materiels_disponibles = [m for m in materiels_total if m.est_disponible()]
+    materiels_en_pret = [m for m in materiels_total if m.est_en_pret()]
+    materiels_en_maintenance = [m for m in materiels_total if m.est_en_maintenance()]
     if request.method == "POST":
 
         if action == "register_materiel":
@@ -186,9 +188,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "formMateriel": formMateriel,
         "formEmprunteur": formEmprunteur,
         "formEmprunt": formEmprunt,
-        "materiels": materiels,
+        "classes":classes,
+        "materiels_total": materiels_total,
         "materiels_recents": materiels_recents,
         "materiels_disponibles": materiels_disponibles,
+        "materiels_en_pret": materiels_en_pret,
+        "materiels_en_maintenance": materiels_en_maintenance,
         "materiel_detail": materiel_detail,
         "editMaterielForm": editFormMateriel,
         "editEmprunteurForm": editFormEmprunteur,
@@ -196,7 +201,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "emprunteurs": emprunteurs,
         "emprunts": emprunts,
         "statuts_emprunt": Emprunt.Statut.choices,
-    
+        "emprunt_recents": emprunt_recents,
         "categories": categories,
         "categorie_filtre": categorie_filtre,
     }
@@ -219,40 +224,6 @@ def retirer_materiel(request, materiel_id):
     return redirect(f"{reverse('equipement:dashboard')}?tab=list")
 
 
-@require_POST
-def modifier_statut_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
-    emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
-    nouveau_statut = request.POST.get("statut")
-    source = request.POST.get("source", "equipement")
-    statuts_valides = [statut for statut, _ in Emprunt.Statut.choices]
-
-    if nouveau_statut not in statuts_valides:
-        messages.error(request, "Statut invalide.")
-    else:
-        emprunt.statut = nouveau_statut
-        if nouveau_statut == Emprunt.Statut.RETOURNE:
-            emprunt.date_retour_effective = timezone.localdate()
-        elif nouveau_statut == Emprunt.Statut.EN_COURS:
-            emprunt.date_retour_effective = None
-        emprunt.save(update_fields=["statut", "date_retour_effective"])
-
-        materiels = [ligne.materiel for ligne in emprunt.lignes.all()]
-        if not materiels and emprunt.materiel_id:
-            materiels = [emprunt.materiel]
-
-        if nouveau_statut == Emprunt.Statut.RETOURNE:
-            for materiel in materiels:
-                materiel.retourner()
-        elif nouveau_statut == Emprunt.Statut.EN_COURS:
-            for materiel in materiels:
-                materiel.etat = "EN PRET"
-                materiel.save(update_fields=["etat"])
-
-        messages.success(request, "Statut de l'emprunt modifie avec succes.")
-
-    if source == "admin":
-        return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
 
 
 @login_required
@@ -261,15 +232,15 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
         form = EmpruntForm(request.POST)
         if form.is_valid():
             materiels_choisis = form.cleaned_data["materiels"]
-            date_emprunt = form.cleaned_data["date_emprunt"]
+            date_operation = form.cleaned_data["date_operation"]
             now = timezone.now()
 
-            if timezone.is_naive(date_emprunt):
-                date_emprunt = timezone.make_aware(date_emprunt)
+            if timezone.is_naive(date_operation):
+                date_operation = timezone.make_aware(date_operation)
 
-            statut = Emprunt.Statut.EN_COURS if date_emprunt <= now else Emprunt.Statut.EN_ATTENTE
+            statut = Emprunt.Statut.APPROUVE if date_operation <= now else Emprunt.Statut.EN_ATTENTE
 
-            if statut == Emprunt.Statut.EN_COURS:
+            if statut == Emprunt.Statut.APPROUVE:
                 indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
                 if indisponibles:
                     noms = ", ".join(m.nom for m in indisponibles)
@@ -277,24 +248,27 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                     return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
 
             emprunt = Emprunt.objects.create(
-                materiel=materiels_choisis[0],
+                materiels=materiels_choisis[0],
+                date_operation=date_operation,
+                notes=form.cleaned_data["notes"],
+                type_operation=Operation.TypeOperation.EMPRUNT,
                 emprunteur=form.cleaned_data["emprunteur"],
-                date_emprunt=date_emprunt,
+                classe=form.cleaned_data["emprunteur"].get_classe(),
                 date_retour_prevue=form.cleaned_data["date_retour_prevue"],
                 statut=statut,
-                notes=form.cleaned_data["notes"],
+
             )
 
             for materiel in materiels_choisis:
                 LigneEmprunt.objects.create(emprunt=emprunt, materiel=materiel)
-                if statut == Emprunt.Statut.EN_COURS:
+                if statut == Emprunt.Statut.APPROUVE:
                     materiel.mettre_en_pret()
 
             messages.success(
                 request,
                 f"Emprunt enregistré avec succès ({len(materiels_choisis)} équipement(s), statut : {emprunt.get_statut_display()})."
             )
-            return redirect(f"{reverse('equipement:dashboard')}?tab=home")
+            return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
 
         messages.error(request, "Erreur dans le formulaire.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
@@ -459,10 +433,10 @@ def import_emprunts(request):
         emprunt_id     = row[0] 
         noms_materiels = row[1]
         nom_emprunteur = row[2]
-        date_emprunt   = row[3]  
+        date_operation = row[3]  
         retour_prevu   = row[4]
         notes          = row[5]
-        statut         = row[6] if len(row) > 6 else "EN_COURS"
+        statut         = row[6] if len(row) > 6 else "APPROUVE"
 
         if not noms_materiels or not nom_emprunteur:
             erreurs.append(f"Ligne {i} : matériel ou emprunteur vide")
@@ -489,7 +463,7 @@ def import_emprunts(request):
 
         statut = statut.upper().strip()
         if statut not in valeurs_valides:
-            statut = "EN_COURS"
+            statut ="APPROUVE"
 
         parties = nom_emprunteur.strip().split()
         emprunteur_obj = None
@@ -605,7 +579,7 @@ def exporter_template_emprunts(request):
         cell.fill = PatternFill("solid", fgColor="16A34A")
 
     emprunts = Emprunt.objects.select_related(
-        "materiel", "emprunteur"
+        "materiels", "emprunteur"
     ).prefetch_related("lignes__materiel").order_by("id")
 
     for emprunt in emprunts:

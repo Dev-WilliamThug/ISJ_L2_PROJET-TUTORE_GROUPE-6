@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Materiel, Tierce
+from .models import Materiel, Operation, Tierce
 
 
 def _next_prefixed_id(last_value: str | None, prefix: str, fallback_count: int) -> str: 
@@ -39,7 +39,7 @@ class MaterielForm(forms.ModelForm):
 
     class Meta:
         model = Materiel
-        fields = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque']
+        fields = ['id_materiel', 'nom', 'couleur','numero_serie','categorie', 'etat', 'marque']
 
 
 class EditMaterielForm(forms.ModelForm):
@@ -78,7 +78,7 @@ class EnregistrerEmprunteurForm(forms.ModelForm):
 
     class Meta:
         model = Tierce
-        fields = ["id_Tierce", "nom", "prenom", "email", "type_Tierce"]
+        fields = ["id_Tierce", "nom", "prenom", "email", "type_Tierce","classe"]
 
 
 class EditEmprunteurForm(forms.ModelForm):
@@ -93,25 +93,20 @@ class EditEmprunteurForm(forms.ModelForm):
 
     class Meta:
         model = Tierce
-        fields = ["id_Tierce", "nom", "prenom", "email", "type_Tierce"]
+        fields = ["id_Tierce", "nom", "prenom", "email", "type_Tierce","classe"]
 
 
 class EmpruntForm(forms.Form):
     """Formulaire de création d'un emprunt multi-équipements."""
 
-    materiels = forms.ModelMultipleChoiceField(
-        queryset=Materiel.objects.filter(etat="DISPONIBLE"),
-        widget=forms.CheckboxSelectMultiple,
-        label="Équipements",
-        error_messages={"required": "Sélectionnez au moins un équipement."},
-    )
     emprunteur = forms.ModelChoiceField(
         queryset=Tierce.objects.all(),
         widget=forms.Select(attrs={"class": "field"}),
         label="Emprunteur",
         empty_label="— Choisir un emprunteur —",
     )
-    date_emprunt = forms.DateTimeField(
+
+    date_operation = forms.DateTimeField(
         widget=forms.DateTimeInput(
             attrs={"class": "field", "type": "datetime-local"},
             format="%Y-%m-%dT%H:%M",
@@ -119,10 +114,20 @@ class EmpruntForm(forms.Form):
         input_formats=["%Y-%m-%dT%H:%M"],
         label="Date d'emprunt",
     )
+
     date_retour_prevue = forms.DateField(
         widget=forms.DateInput(attrs={"class": "field", "type": "date"}),
         label="Retour prévu",
+        error_messages={"required": "Sélectionnez une date de retour."},
     )
+
+    materiels = forms.ModelMultipleChoiceField(
+        queryset=Materiel.objects.filter(etat="DISPONIBLE"),
+        widget=forms.CheckboxSelectMultiple,
+        label="Équipements",
+        error_messages={"required": "Sélectionnez au moins un équipement."},
+    )
+
     notes = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={"class": "field resize-none", "rows": 3}),
@@ -133,11 +138,11 @@ class EmpruntForm(forms.Form):
         super().__init__(*args, **kwargs)
         from django.utils import timezone
         now = timezone.localtime(timezone.now())
-        self.fields["date_emprunt"].initial = now.strftime("%Y-%m-%dT%H:%M")
+        self.fields["date_operation"].initial = now.strftime("%Y-%m-%dT%H:%M")
 
     def clean(self):
         cleaned = super().clean()
-        date_emprunt = cleaned.get("date_emprunt")
+        date_emprunt = cleaned.get("date_operation")
         date_retour = cleaned.get("date_retour_prevue")
         if date_emprunt and date_retour:
             if date_retour < date_emprunt.date():
