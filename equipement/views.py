@@ -14,7 +14,7 @@ from django.db.models import Q
 from users.forms import LoginForm
 from users.models import CustomUser
 from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
-from .models import Materiel,Classe,Tierce, Emprunt, LigneEmprunt,Operation
+from .models import Materiel,Classe,Tierce, Emprunt, LigneEmprunt,Operation, Rappel
 
 
 def manager_required(view_func):
@@ -150,9 +150,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     emprunteurs = Tierce.objects.all()
     materiels_total = Materiel.objects.all()
     emprunts = Emprunt.objects.filter(Q(statut=Emprunt.Statut.APPROUVE) | Q(statut=Emprunt.Statut.REFUSE)).select_related(
-        "materiels",
         "emprunteur",
-    ).prefetch_related("lignes__materiel").order_by("-date_operation")
+    ).prefetch_related("lignes__materiel").order_by("-created_at")
     classes = Classe.objects.all()
   
     categorie_filtre = request.GET.get("categorie", "")
@@ -163,7 +162,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     categories = Materiel.Categorie.choices
 
     materiels_recents = Materiel.objects.order_by("-id_materiel")[:5]
-    emprunt_recents = Emprunt.objects.order_by("-date_operation")[:5]
+    emprunt_recents = Emprunt.objects.order_by("-created_at")[:5]
     materiels_disponibles = [m for m in materiels_total if m.est_disponible()]
     materiels_en_pret = [m for m in materiels_total if m.est_en_pret()]
     materiels_en_maintenance = [m for m in materiels_total if m.est_en_maintenance()]
@@ -248,15 +247,11 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                     return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
 
             emprunt = Emprunt.objects.create(
-                materiels=materiels_choisis[0],
-                date_operation=date_operation,
                 notes=form.cleaned_data["notes"],
-                type_operation=Operation.TypeOperation.EMPRUNT,
                 emprunteur=form.cleaned_data["emprunteur"],
                 classe=form.cleaned_data["emprunteur"].get_classe(),
                 date_retour_prevue=form.cleaned_data["date_retour_prevue"],
                 statut=statut,
-
             )
 
             for materiel in materiels_choisis:
@@ -525,7 +520,6 @@ def import_emprunts(request):
                 emprunt, created = Emprunt.objects.update_or_create(
                     id=emprunt_id_int,
                     defaults={
-                        "materiel": materiels_objs[0],
                         "emprunteur": emprunteur_obj,
                         "date_retour_prevue": retour_prevu_date,
                         "statut": statut,
@@ -534,7 +528,6 @@ def import_emprunts(request):
                 )
             else:
                 emprunt = Emprunt.objects.create(
-                    materiel=materiels_objs[0],
                     emprunteur=emprunteur_obj,
                     date_retour_prevue=retour_prevu_date,
                     statut=statut,
@@ -618,3 +611,90 @@ def exporter_template_emprunts(request):
     response['Content-Disposition'] = 'attachment; filename=emprunts.xlsx'
     wb.save(response)
     return response
+
+
+@manager_required
+def overdue_emprunts(request: HttpRequest) -> HttpResponse:
+    """Affiche la liste des emprunts en retard."""
+    from .reminder_service import ReminderService
+    
+    overdue = ReminderService.get_overdue_emprunts()
+    emprunts_data = []
+    
+    for emprunt in overdue:
+        days_overdue = ReminderService.get_days_overdue(emprunt)
+        emprunts_data.append({
+            'emprunt': emprunt,
+            'days_overdue': days_overdue,
+            'emprunteur': emprunt.emprunteur,
+            'materiels': [ligne.materiel for ligne in emprunt.lignes.all()],
+        })
+    
+    # Trier par nombre de jours de retard (décroissant)
+    emprunts_data.sort(key=lambda x: x['days_overdue'], reverse=True)
+    
+    context = {
+        'emprunts': emprunts_data,
+        'total': len(emprunts_data),
+    }
+    return render(request, 'equipement/overdue_emprunts.html', context)
+
+
+@manager_required
+def rappels_list(request: HttpRequest) -> HttpResponse:
+    """Affiche la liste des rappels envoyés."""
+    rappels = Rappel.objects.select_related('emprunt', 'emprunt__emprunteur').order_by('-date_envoi')
+    
+    # Filtrer par type de rappel si requis
+    type_filter = request.GET.get('type', '')
+    if type_filter:
+        rappels = rappels.filter(type_rappel=type_filter)
+    
+    # Filtrer par statut d'envoi si requis
+    statut_filter = request.GET.get('statut', '')
+    if statut_filter:
+        rappels = rappels.filter(statut_envoi=statut_filter)
+    
+    # Pagination
+    page_num = request.GET.get('page', 1)
+    from django.core.paginator import Paginator
+    paginator = Paginator(rappels, 20)
+    page = paginator.get_page(page_num)
+    
+    context = {
+        'rappels': page.object_list,
+        'page': page,
+        'type_filter': type_filter,
+        'statut_filter': statut_filter,
+        'types': Rappel.TypeRappel.choices,
+    }
+    return render(request, 'equipement/rappels_list.html', context)
+
+
+@require_POST
+@manager_required
+def send_reminders_manual(request: HttpRequest) -> HttpResponse:
+    """Envoie manuellement les rappels pour les emprunts en retard."""
+    from .reminder_service import ReminderService
+    
+    try:
+        stats = ReminderService.send_all_reminders()
+        
+        message = (
+            f"Rappels envoyés avec succès! "
+            f"Emprunts en retard: {stats['total_emprunts_en_retard']}, "
+            f"Rappels envoyés: {stats['rappels_envoyes']}"
+        )
+        
+        if stats['rappels_echoues'] > 0:
+            messages.warning(
+                request,
+                f"{message} ({stats['rappels_echoues']} échec(s))"
+            )
+        else:
+            messages.success(request, message)
+    
+    except Exception as e:
+        messages.error(request, f"Erreur lors de l'envoi des rappels: {str(e)}")
+    
+    return redirect(request.META.get('HTTP_REFERER', 'equipement:dashboard'))

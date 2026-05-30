@@ -45,10 +45,10 @@
                 </div>
                 <div class="min-w-0 flex-1">
                   <p class="text-sm font-semibold text-slate-800">{{ emprunt.emprunteur.prenom }} {{ emprunt.emprunteur.nom }}</p>
-                  <p class="mt-1 text-xs text-slate-500">Emprunté : {{ emprunt.materiels.nom }} ({{ emprunt.materiels.id_materiel }})</p>
+                  <p class="mt-1 text-xs text-slate-500">Emprunté : {% for ligne in emprunt.lignes.all %}{{ ligne.materiel.nom }} ({{ ligne.materiel.id_materiel }}){% if not forloop.last %}, {% endif %}{% endfor %}</p>
                 </div>
                 <div>
-                  <p class="text-sm text-slate-600">Le {{ emprunt.date_operation|date:"d M Y H:i" }}</p>
+                  <p class="text-sm text-slate-600">Le {{ emprunt.created_at|date:"d M Y H:i" }}</p>
                   <p class="text-xs text-slate-400">{{ emprunt.get_statut_display }}</p>
                 </div>
               </li>
@@ -401,11 +401,11 @@
                       {% endfor %}
                     </div>
                   {% else %}
-                    {{ emprunt.materiel }}
+                    -
                   {% endif %}
                 </td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur }}</td>
-                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_operation }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.created_at|date:"d/m/Y H:i" }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_retour_prevue }}</td>
                 {%if emprunt.statut == "approuve" %}
                   <td class="px-5 py-3 text-sm text-greenBrand-500 font-semibold">{{ emprunt.get_statut_display }}</td>

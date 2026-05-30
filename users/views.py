@@ -20,7 +20,6 @@ from equipement.models import (
 )
 
 
-
 def _generate_password(length: int = 12) -> str:
     alphabet = string.ascii_letters + string.digits 
     while True:
@@ -29,12 +28,8 @@ def _generate_password(length: int = 12) -> str:
             any(c.isupper() for c in pwd)
             and any(c.islower() for c in pwd)
             and any(c.isdigit() for c in pwd)
-        
         ):
             return pwd
-
-
-
 
 
 def admin_required(view_func):
@@ -46,13 +41,13 @@ def admin_required(view_func):
     return _wrapped
 
 
-
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
             return redirect("users:dashboard")
         elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
+            return redirect("equipement:dashboard")
+
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -68,12 +63,13 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 messages.error(request, "Identifiants incorrects.")
             else:
                 login(request, user)
-            if request.user.type_user == CustomUser.TypeUser.ADMIN:
-                return redirect("users:dashboard")
-            elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
-    return render(request, "users/login.html", {"form": form})
+                # ✅ On utilise "user" directement, pas "request.user"
+                if user.type_user == CustomUser.TypeUser.ADMIN:
+                    return redirect("users:dashboard")
+                elif user.type_user == CustomUser.TypeUser.MANAGER:
+                    return redirect("equipement:dashboard")
 
+    return render(request, "users/login.html", {"form": form})
 
 
 def logout_view(request: HttpRequest) -> HttpResponse:
@@ -82,20 +78,17 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return redirect("users:login")
 
 
-
 @login_required
 @admin_required
 def dashboard(request: HttpRequest) -> HttpResponse:
-
     tab = request.GET.get("tab", "home")
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
     emprunts_en_attente = Emprunt.objects.select_related(
-        "materiels",
         "emprunteur",
     ).prefetch_related("lignes__materiel").filter(
         statut=Emprunt.Statut.EN_ATTENTE
-    ).order_by("-date_operation")
+    ).order_by("-created_at")
 
     form = RegisterUserForm()
 
@@ -110,12 +103,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                         user.set_password(plain_password)
                         user.save()
 
-                        
                         email_dest = user.email
                         prenom = user.prenom
                         nom = user.nom
-
-                       
                         pwd_copy = plain_password
 
                         def send_email_after_commit():
@@ -126,8 +116,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                                     f"Un compte a été créé pour vous.\n\n"
                                     f"Email    : {email_dest}\n"
                                     f"Mot de passe : {pwd_copy}\n\n"
-                                    f"avec nos futures améliorations vous pourrez bientot pouvoir le personnaliser"
-                                    f"dès votre première connexion.\n\n"
+                                    f"Avec nos futures améliorations vous pourrez bientôt "
+                                    f"le personnaliser dès votre première connexion.\n\n"
                                     f"Cordialement,\nL'équipe d'administration"
                                 ),
                                 settings.DEFAULT_FROM_EMAIL,
@@ -136,8 +126,6 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                             )
 
                         transaction.on_commit(send_email_after_commit)
-
-                        # 6. Effacer la variable pour qu'elle ne persiste pas en mémoire
                         del plain_password
 
                     messages.success(
@@ -166,14 +154,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     return render(request, "users/dashboard.html", context)
 
 
-
 @login_required
 @admin_required
 def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
-    """
-    Permet de modifier les informations d'un utilisateur (nom, prénom, email, type).
-    Le mot de passe n'est PAS modifié ici.
-    """
     target = get_object_or_404(CustomUser, pk=user_id)
 
     if request.method == "POST":
@@ -191,7 +174,6 @@ def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
         form = EditUserForm(instance=target)
 
     return render(request, "users/edit_user.html", {"form": form, "target": target})
-
 
 
 @require_POST
@@ -212,7 +194,6 @@ def deactivate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return redirect(f"{reverse('users:dashboard')}?tab=disabled")
 
 
-
 @require_POST
 @login_required
 @admin_required
@@ -226,20 +207,18 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     messages.success(request, "Utilisateur activé.")
     return redirect(f"{reverse('users:dashboard')}?tab=active")
 
- 
-def validate_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+
+def validate_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
     emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
     emprunt.statut = Emprunt.Statut.APPROUVE
     emprunt.save(update_fields=["statut"])
     messages.success(request, "Emprunt validé.")
     return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
- 
 
-def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+
+def refuser_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
     emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
     emprunt.statut = Emprunt.Statut.REFUSE
     emprunt.save(update_fields=["statut"])
     messages.success(request, "Emprunt refusé.")
     return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
- 
- 

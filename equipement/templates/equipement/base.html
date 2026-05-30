@@ -116,6 +116,17 @@
         <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
           <h1 class="text-xl font-bold text-greenBrand-700">{% block page_title %}Tableau de bord{% endblock %}</h1>
           <div class="flex items-center gap-3">
+            {% if has_overdue %}
+              <a href="{% url 'equipement:overdue_emprunts' %}" class="relative flex items-center justify-center h-10 w-10 rounded-lg bg-red-50 hover:bg-red-100 transition" title="Emprunts en retard">
+                <svg class="h-5 w-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M15.75 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5A2.25 2.25 0 0 0 8.25 22.5h7.5A2.25 2.25 0 0 0 18 20.25V3.75A2.25 2.25 0 0 0 15.75 1.5Zm-3 18a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z"/>
+                  <circle cx="12" cy="3.5" r="2" fill="#EF4444"/>
+                </svg>
+                <span class="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5 bg-red-600 text-white text-xs font-bold rounded-full">
+                  {{ overdue_count }}
+                </span>
+              </a>
+            {% endif %}
             <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
               <div class="grid h-7 w-7 place-items-center rounded-full bg-greenBrand-600 text-xs font-bold text-white">
                 {{ request.user.prenom|first|upper }}{{ request.user.nom|first|upper }}

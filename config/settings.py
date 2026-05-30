@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'equipement.context_processors.overdue_count',
             ],
         },
     },
@@ -86,11 +87,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'gestionEquipement',
         'USER': 'postgres',
-        'PASSWORD': 'pass',
+        'PASSWORD': 'Snyfflorent',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+# 👇 Ajoute cette ligne juste ici
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Password validation

@@ -1,0 +1,99 @@
+{% extends "equipement/base.html" %}
+
+{% block title %}Emprunts en Retard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1>📋 Emprunts en Retard</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <form method="POST" action="{% url 'equipement:send_reminders_manual' %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-warning">
+                    📧 Envoyer les Rappels
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if emprunts %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Emprunteur</th>
+                        <th>Matériel(s)</th>
+                        <th>Date de Retour Prévue</th>
+                        <th class="text-center">Jours de Retard</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in emprunts %}
+                        <tr>
+                            <td>
+                                <strong>{{ item.emprunteur.prenom }} {{ item.emprunteur.nom }}</strong>
+                            </td>
+                            <td>
+                                {% for materiel in item.materiels %}
+                                    <span class="badge bg-info">{{ materiel.nom }}</span>
+                                    {% if not forloop.last %}<br>{% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                <span class="badge bg-secondary">
+                                    {{ item.emprunt.date_retour_prevue|date:"d/m/Y" }}
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                {% if item.days_overdue >= 7 %}
+                                    <span class="badge bg-danger">{{ item.days_overdue }} jours</span>
+                                {% elif item.days_overdue >= 3 %}
+                                    <span class="badge bg-warning">{{ item.days_overdue }} jours</span>
+                                {% else %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis">{{ item.days_overdue }} jour{{ item.days_overdue|pluralize }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <small class="text-muted">{{ item.emprunteur.email }}</small>
+                            </td>
+                            <td>
+                                <a href="{% url 'equipement:detail_emprunteur' item.emprunteur.id_Tierce %}" 
+                                   class="btn btn-sm btn-info">
+                                    Voir
+                                </a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="alert alert-info mt-3">
+            <strong>Total:</strong> {{ total }} emprunt(s) en retard
+        </div>
+    {% else %}
+        <div class="alert alert-success">
+            ✅ Aucun emprunt en retard!
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .badge-secondary {
+        background-color: #6c757d;
+    }
+</style>
+{% endblock %}

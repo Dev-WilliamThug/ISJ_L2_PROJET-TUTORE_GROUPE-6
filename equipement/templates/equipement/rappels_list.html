@@ -1,0 +1,157 @@
+{% extends "equipement/base.html" %}
+
+{% block title %}Historique des Rappels{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>📧 Historique des Rappels</h1>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Filtres</h5>
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label for="type" class="form-label">Type de Rappel</label>
+                            <select name="type" id="type" class="form-select">
+                                <option value="">-- Tous les types --</option>
+                                {% for value, label in types %}
+                                    <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label for="statut" class="form-label">Statut d'Envoi</label>
+                            <select name="statut" id="statut" class="form-select">
+                                <option value="">-- Tous les statuts --</option>
+                                <option value="envoye" {% if statut_filter == 'envoye' %}selected{% endif %}>✓ Envoyé</option>
+                                <option value="echec" {% if statut_filter == 'echec' %}selected{% endif %}>✗ Échec</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                🔍 Filtrer
+                            </button>
+                            <a href="{% url 'equipement:rappels_list' %}" class="btn btn-secondary ms-2">
+                                Réinitialiser
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if rappels %}
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Emprunteur</th>
+                        <th>Email</th>
+                        <th>Type de Rappel</th>
+                        <th>Date d'Envoi</th>
+                        <th class="text-center">Statut</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rappel in rappels %}
+                        <tr>
+                            <td>
+                                <strong>{{ rappel.emprunt.emprunteur.prenom }} {{ rappel.emprunt.emprunteur.nom }}</strong>
+                            </td>
+                            <td>
+                                <small>{{ rappel.email_destinataire }}</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-info">
+                                    {{ rappel.get_type_rappel_display }}
+                                </span>
+                            </td>
+                            <td>
+                                {{ rappel.date_envoi|date:"d/m/Y H:i" }}
+                            </td>
+                            <td class="text-center">
+                                {% if rappel.statut_envoi == 'envoye' %}
+                                    <span class="badge bg-success">✓ Envoyé</span>
+                                {% else %}
+                                    <span class="badge bg-danger">✗ Échec</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'equipement:detail_emprunteur' rappel.emprunt.emprunteur.id_Tierce %}" 
+                                   class="btn btn-sm btn-info">
+                                    Voir
+                                </a>
+                                {% if rappel.message_erreur %}
+                                    <button type="button" class="btn btn-sm btn-warning" 
+                                            data-bs-toggle="tooltip" 
+                                            title="{{ rappel.message_erreur }}">
+                                        ⚠️
+                                    </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page.has_other_pages %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1{% if type_filter %}&type={{ type_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">Première</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.previous_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">Précédente</a>
+                        </li>
+                    {% endif %}
+
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page.number }} sur {{ page.paginator.num_pages }}</span>
+                    </li>
+
+                    {% if page.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.next_page_number }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">Suivante</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page.paginator.num_pages }}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if statut_filter %}&statut={{ statut_filter }}{% endif %}">Dernière</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            Aucun rappel trouvé selon les filtres sélectionnés.
+        </div>
+    {% endif %}
+</div>
+
+<script>
+    // Initialiser les tooltips Bootstrap
+    document.addEventListener('DOMContentLoaded', function() {
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

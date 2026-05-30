@@ -131,8 +131,7 @@ class Operation(models.Model):
         SORTIE = "sortie", _("Sortie (planifiée)")
         EMPRUNT = "emprunt", _("Emprunt")
 
-
-    materiels = models.ForeignKey("Materiel", on_delete=models.CASCADE, related_name="emprunts")
+    materiel = models.ForeignKey("Materiel", on_delete=models.CASCADE, related_name="operations")
     date_operation = models.DateTimeField(auto_now_add=True)
     notes = models.TextField(blank=True)
     type_operation = models.CharField(
@@ -141,8 +140,18 @@ class Operation(models.Model):
         default=TypeOperation.EMPRUNT,
         verbose_name="Type d'opération",
     )
+    
+    class Meta:
+        verbose_name = "Opération"
+        verbose_name_plural = "Opérations"
+        ordering = ['-date_operation']
 
-class Emprunt(Operation):
+    def __str__(self):
+        return f"{self.type_operation} - {self.materiel}"
+
+
+class Emprunt(models.Model):
+    """Modèle pour gérer les emprunts de matériel."""
 
     class Statut(models.TextChoices):
         EN_ATTENTE = "en_attente", _("En attente")
@@ -150,8 +159,7 @@ class Emprunt(Operation):
         REFUSE = "refuse", _("Refusé")
         RETOURNE = "retourne", _("Retourné")
  
-    # Champs existants (à conserver)
-    emprunteur = models.ForeignKey("equipement.Tierce", on_delete=models.CASCADE)
+    emprunteur = models.ForeignKey("equipement.Tierce", on_delete=models.CASCADE, related_name="emprunts")
     classe = models.ForeignKey(Classe, on_delete=models.SET_NULL, null=True, blank=True)
     date_retour_prevue = models.DateField(null=True, blank=True)
     date_retour_reelle = models.DateField(null=True, blank=True)
@@ -160,16 +168,17 @@ class Emprunt(Operation):
         choices=Statut.choices,
         default=Statut.EN_ATTENTE
     )
+    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(null=True, blank=True)
  
     class Meta:
-        ordering = ['-date_operation']
+        ordering = ['-created_at']
         verbose_name = "Emprunt"
         verbose_name_plural = "Emprunts"
  
     def __str__(self):
-        return f"{self.materiel} - {self.emprunteur}"
+        return f"Emprunt #{self.id} - {self.emprunteur.get_full_name()}"
 
 
 class LigneEmprunt(models.Model):
@@ -192,5 +201,48 @@ class LigneEmprunt(models.Model):
 
     def __str__(self):
          return f"{self.materiel} dans Emprunt #{self.emprunt_id}"
+
+
+class Rappel(models.Model):
+    """Modèle pour tracer les rappels envoyés aux emprunteurs."""
+    
+    class TypeRappel(models.TextChoices):
+        RETARD_1_JOUR = "retard_1", _("1 jour de retard")
+        RETARD_3_JOURS = "retard_3", _("3 jours de retard")
+        RETARD_7_JOURS = "retard_7", _("7 jours de retard")
+    
+    emprunt = models.ForeignKey(
+        Emprunt,
+        on_delete=models.CASCADE,
+        related_name="rappels",
+        verbose_name="Emprunt"
+    )
+    type_rappel = models.CharField(
+        max_length=20,
+        choices=TypeRappel.choices,
+        verbose_name="Type de rappel"
+    )
+    date_envoi = models.DateTimeField(auto_now_add=True, verbose_name="Date d'envoi")
+    email_destinataire = models.EmailField(verbose_name="Email destinataire")
+    statut_envoi = models.CharField(
+        max_length=20,
+        choices=[
+            ('envoye', 'Envoyé'),
+            ('echec', 'Échec'),
+        ],
+        default='envoye',
+        verbose_name="Statut d'envoi"
+    )
+    message_erreur = models.TextField(blank=True, verbose_name="Message d'erreur")
+    
+    class Meta:
+        ordering = ['-date_envoi']
+        verbose_name = "Rappel"
+        verbose_name_plural = "Rappels"
+        # Éviter d'envoyer plusieurs rappels du même type pour le même emprunt
+        unique_together = ('emprunt', 'type_rappel')
+    
+    def __str__(self):
+        return f"Rappel {self.get_type_rappel_display()} - {self.emprunt.emprunteur} ({self.date_envoi.date()})"
 
 
