@@ -20,6 +20,7 @@ urlpatterns = [
     path("emprunt/enregistrer/", views.enregistrer_emprunt_view, name="enregistrer_emprunt"),
     path("emprunts/template/", views.exporter_template_emprunts, name="exporter_template_emprunts"),
     # URLs pour le système de rappels
+    path("api/notifications/", views.notifications_api, name="notifications_api"),
     path("emprunts/en-retard/", views.overdue_emprunts, name="overdue_emprunts"),
     path("rappels/", views.rappels_list, name="rappels_list"),
     path("rappels/envoyer/", views.send_reminders_manual, name="send_reminders_manual"),

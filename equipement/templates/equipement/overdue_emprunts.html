@@ -1,99 +1,106 @@
 {% extends "equipement/base.html" %}
 
 {% block title %}Emprunts en Retard{% endblock %}
+{% block page_title %}Emprunts en retard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1>📋 Emprunts en Retard</h1>
-        </div>
-        <div class="col-md-4 text-end">
-            <form method="POST" action="{% url 'equipement:send_reminders_manual' %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-warning">
-                    📧 Envoyer les Rappels
-                </button>
-            </form>
-        </div>
-    </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endif %}
-
-    {% if emprunts %}
-        <div class="table-responsive">
-            <table class="table table-hover table-bordered">
-                <thead class="table-dark">
-                    <tr>
-                        <th>Emprunteur</th>
-                        <th>Matériel(s)</th>
-                        <th>Date de Retour Prévue</th>
-                        <th class="text-center">Jours de Retard</th>
-                        <th>Email</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in emprunts %}
-                        <tr>
-                            <td>
-                                <strong>{{ item.emprunteur.prenom }} {{ item.emprunteur.nom }}</strong>
-                            </td>
-                            <td>
-                                {% for materiel in item.materiels %}
-                                    <span class="badge bg-info">{{ materiel.nom }}</span>
-                                    {% if not forloop.last %}<br>{% endif %}
-                                {% endfor %}
-                            </td>
-                            <td>
-                                <span class="badge bg-secondary">
-                                    {{ item.emprunt.date_retour_prevue|date:"d/m/Y" }}
-                                </span>
-                            </td>
-                            <td class="text-center">
-                                {% if item.days_overdue >= 7 %}
-                                    <span class="badge bg-danger">{{ item.days_overdue }} jours</span>
-                                {% elif item.days_overdue >= 3 %}
-                                    <span class="badge bg-warning">{{ item.days_overdue }} jours</span>
-                                {% else %}
-                                    <span class="badge bg-warning-subtle text-warning-emphasis">{{ item.days_overdue }} jour{{ item.days_overdue|pluralize }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <small class="text-muted">{{ item.emprunteur.email }}</small>
-                            </td>
-                            <td>
-                                <a href="{% url 'equipement:detail_emprunteur' item.emprunteur.id_Tierce %}" 
-                                   class="btn btn-sm btn-info">
-                                    Voir
-                                </a>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="alert alert-info mt-3">
-            <strong>Total:</strong> {{ total }} emprunt(s) en retard
-        </div>
-    {% else %}
-        <div class="alert alert-success">
-            ✅ Aucun emprunt en retard!
-        </div>
-    {% endif %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <p class="text-sm text-slate-500">{{ total }} emprunt{{ total|pluralize }} en retard actuellement</p>
+  </div>
+  <form method="POST" action="{% url 'equipement:send_reminders_manual' %}">
+    {% csrf_token %}
+    <button type="submit"
+            class="inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition">
+      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/>
+      </svg>
+      Envoyer les rappels par email
+    </button>
+  </form>
 </div>
 
-<style>
-    .badge-secondary {
-        background-color: #6c757d;
-    }
-</style>
+{% if emprunts %}
+  <div class="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <th class="px-4 py-3">Emprunteur</th>
+          <th class="px-4 py-3">Matériel(s)</th>
+          <th class="px-4 py-3">Date prévue</th>
+          <th class="px-4 py-3 text-center">Retard</th>
+          <th class="px-4 py-3">Email</th>
+          <th class="px-4 py-3">Action</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for item in emprunts %}
+          <tr class="hover:bg-slate-50 transition">
+            <td class="px-4 py-3 font-semibold text-slate-800">
+              {{ item.emprunteur.prenom }} {{ item.emprunteur.nom }}
+            </td>
+            <td class="px-4 py-3">
+              <div class="flex flex-wrap gap-1">
+                {% for materiel in item.materiels %}
+                  <span class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                    {{ materiel.nom }}
+                  </span>
+                {% endfor %}
+              </div>
+            </td>
+            <td class="px-4 py-3 text-slate-600">
+              {{ item.emprunt.date_retour_prevue|date:"d/m/Y" }}
+            </td>
+            <td class="px-4 py-3 text-center">
+              {% if item.days_overdue >= 7 %}
+                <span class="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">
+                  {{ item.days_overdue }} jours
+                </span>
+              {% elif item.days_overdue >= 3 %}
+                <span class="inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700">
+                  {{ item.days_overdue }} jours
+                </span>
+              {% else %}
+                <span class="inline-block rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-bold text-yellow-700">
+                  {{ item.days_overdue }} jour{{ item.days_overdue|pluralize }}
+                </span>
+              {% endif %}
+            </td>
+            <td class="px-4 py-3 text-slate-500">
+              {{ item.emprunteur.email }}
+            </td>
+            <td class="px-4 py-3">
+              <a href="{% url 'equipement:detail_emprunteur' item.emprunteur.id_Tierce %}"
+                 class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition">
+                <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                </svg>
+                Voir
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-600">
+    <svg class="h-4 w-4 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/>
+    </svg>
+    <span>Total : <strong class="text-slate-800">{{ total }}</strong> emprunt{{ total|pluralize }} en retard</span>
+  </div>
+
+{% else %}
+  <div class="flex flex-col items-center justify-center rounded-xl border border-green-200 bg-green-50 py-16 gap-3">
+    <svg class="h-12 w-12 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+    </svg>
+    <p class="text-base font-semibold text-green-700">Aucun emprunt en retard !</p>
+    <p class="text-sm text-green-600">Tous les emprunts sont dans les délais.</p>
+  </div>
+{% endif %}
+
 {% endblock %}

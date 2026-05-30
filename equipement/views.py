@@ -639,6 +639,46 @@ def overdue_emprunts(request: HttpRequest) -> HttpResponse:
     }
     return render(request, 'equipement/overdue_emprunts.html', context)
 
+## À AJOUTER dans equipement/views.py
+## Place ce code juste après la fonction overdue_emprunts (ligne ~640)
+
+from django.http import JsonResponse
+
+@manager_required
+def notifications_api(request):
+    """
+    API JSON pour la cloche de notifications du header.
+    Retourne les emprunts en retard avec leurs détails.
+    """
+    from .reminder_service import ReminderService
+
+    overdue = ReminderService.get_overdue_emprunts().select_related(
+        'emprunteur', 'classe'
+    ).prefetch_related('lignes__materiel')
+
+    notifications = []
+    for emprunt in overdue[:10]:  # max 10 dans le dropdown
+        days = ReminderService.get_days_overdue(emprunt)
+        materiels = [ligne.materiel.nom for ligne in emprunt.lignes.all()]
+        notifications.append({
+            'id': emprunt.id,
+            'emprunteur': emprunt.emprunteur.get_full_name(),
+            'days_overdue': days,
+            'date_retour_prevue': emprunt.date_retour_prevue.strftime('%d/%m/%Y')
+                                  if emprunt.date_retour_prevue else 'N/A',
+            'materiels': materiels[:3],  # max 3 matériels affichés dans le dropdown
+        })
+
+    return JsonResponse({
+        'count': overdue.count(),
+        'notifications': notifications,
+    })
+
+
+## À AJOUTER dans equipement/urls.py (dans urlpatterns)
+##
+##   path("api/notifications/", views.notifications_api, name="notifications_api"),
+
 
 @manager_required
 def rappels_list(request: HttpRequest) -> HttpResponse:
