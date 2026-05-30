@@ -107,7 +107,6 @@
         <table class="min-w-full divide-y divide-slate-100">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Code</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Etat</th>
@@ -117,7 +116,6 @@
           <tbody class="divide-y divide-slate-100">
             {% for equipement in materiels_total %}
               <tr class="hover:bg-slate-50">
-                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
                 <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_categorie_display }}</td>
                 <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}
@@ -133,7 +131,7 @@
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500">
+              <tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">
                 Aucun equipement {% if categorie_filtre %}dans cette catégorie{% else %}enregistre{% endif %}.
               </td></tr>
             {% endfor %}
@@ -160,7 +158,6 @@
             <table class="min-w-full divide-y divide-slate-100">
               <thead class="bg-white">
                 <tr>
-                  <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Code</th>
                   <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Nom</th>
                   <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Etat</th>
                   <th class="px-5 py-2 text-left text-xs font-bold uppercase tracking-wider text-slate-400">Marque</th>
@@ -170,7 +167,6 @@
                 {% for eq in materiels_total %}
                   {% if eq.categorie == valeur %}
                     <tr class="hover:bg-slate-50">
-                      <td class="px-5 py-2 text-sm font-semibold text-slate-700">{{ eq.id_materiel }}</td>
                       <td class="px-5 py-2 text-sm text-slate-700">{{ eq.nom }}</td>
                       <td class="px-5 py-2 text-sm text-slate-600">{{ eq.get_etat_display }}</td>
                       <td class="px-5 py-2 text-sm text-slate-600">{{ eq.marque }}</td>
