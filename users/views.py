@@ -11,6 +11,8 @@ from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
+
+from inventaire.models import Inventaire
 from .forms import LoginForm, RegisterUserForm, EditUserForm
 from .models import CustomUser
 from equipement.models import (
@@ -50,9 +52,9 @@ def admin_required(view_func):
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
-            return redirect("users:dashboard")
+            return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
         elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
+            return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -69,9 +71,9 @@ def login_view(request: HttpRequest) -> HttpResponse:
             else:
                 login(request, user)
             if request.user.type_user == CustomUser.TypeUser.ADMIN:
-                return redirect("users:dashboard")
+                return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
             elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
+                return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
     return render(request, "users/login.html", {"form": form})
 
 
@@ -90,6 +92,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     tab = request.GET.get("tab", "home")
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
+    inventaires = Inventaire.objects.select_related("classe").all()
     emprunts_en_attente = Emprunt.objects.select_related(
         "materiels",
         "emprunteur",
@@ -162,6 +165,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "disabled_users": disabled_users,
         "emprunts_en_attente": emprunts_en_attente,
         "statuts_emprunt": Emprunt.Statut.choices,
+        "inventaires": inventaires,
     }
     return render(request, "users/dashboard.html", context)
 

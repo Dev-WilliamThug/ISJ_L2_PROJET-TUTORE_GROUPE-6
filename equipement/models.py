@@ -88,6 +88,9 @@ class Classe(models.Model):
  
     def __str__(self):
         return self.nom
+    @property
+    def get_id(self):
+        return self.id
     
 class Tierce(models.Model):
     
@@ -169,7 +172,7 @@ class Emprunt(Operation):
         verbose_name_plural = "Emprunts"
  
     def __str__(self):
-        return f"{self.materiel} - {self.emprunteur}"
+        return f"{self.materiels} - {self.emprunteur}"
 
 
 class LigneEmprunt(models.Model):

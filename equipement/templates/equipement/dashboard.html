@@ -2,6 +2,7 @@
 
 {% block title %}Dashboard Gestionnaire - Equipement{% endblock %}
 {% block page_title %}Tableau de bord gestionnaire{% endblock %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {% block content %}
   {% if tab == 'dashboard' %}
@@ -25,13 +26,9 @@
         </article>
       </div>
       <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-        <h2 class="text-lg font-bold text-slate-800">Actions rapides</h2>
-        <div class="mt-4 grid gap-3 sm:grid-cols-5">
-          <a href="?tab=equipement/ajouter" class="btn-primary justify-center">Ajouter equipement</a>
-          <a href="?tab=equipement/liste" class="btn-secondary justify-center">Lister equipements</a>
-          <a href="?tab=emprunteur/ajouter" class="btn-secondary justify-center">Ajouter emprunteur</a>
-          <a href="?tab=emprunteurs/liste" class="btn-secondary justify-center">Lister emprunteurs</a>
-          <a href="?tab=emprunts/lister" class="btn-secondary justify-center">Lister emprunts</a>
+        <h2 class="text-lg font-bold text-slate-800">Statistiques parc informatique</h2>
+        <div class="mt-4">
+          <canvas id="stats_parcInformatique" class="w-full h-64"></canvas>
         </div>
       </section>
       <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
@@ -449,3 +446,30 @@
   </div>
   {% endif %}
 {% endblock %}
+ <script>
+    const disponibles = {{ materiels_disponibles }};
+    const empruntes = {{ materiels_en_pret }};
+    const en_maintenance = {{ materiels_en_maintenance }};
+  </script>
+  <script>
+    new Chart(
+        document.getElementById('stats_parcInformatique'),
+        {
+            type: 'doughnut',
+            data: {
+                labels: [
+                    'Disponible',
+                    'Emprunté',
+                    'Hors service'
+                ],
+                datasets: [{
+                    data: [
+                        disponibles,
+                        empruntes,
+                        en_maintenance
+                    ]
+                }]
+            }
+        }
+    );
+    </script>

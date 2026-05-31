@@ -33,9 +33,9 @@ def manager_required(view_func):
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
-            return redirect("users:dashboard")
+            return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
         elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
+                return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -52,9 +52,9 @@ def login_view(request: HttpRequest) -> HttpResponse:
             else:
                 login(request, user)
             if request.user.type_user == CustomUser.TypeUser.ADMIN:
-                return redirect("users:dashboard")
+                return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
             elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect("equipement:dashboard")
+                return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
     return render(request, "equipement/login.html", {"form": form})
 
 
