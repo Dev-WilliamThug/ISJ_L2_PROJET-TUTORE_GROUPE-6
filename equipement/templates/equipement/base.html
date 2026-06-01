@@ -49,6 +49,7 @@
   </head>
   <body class="bg-slate-100 text-slate-800">
     <div class="min-h-screen lg:flex">
+      <!-- Sidebar -->
       <aside class="flex w-64 shrink-0 flex-col bg-darkPanel text-white lg:min-h-screen">
         <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
           <div class="grid h-9 w-9 place-items-center rounded-lg bg-greenBrand-600 shadow">
@@ -65,23 +66,23 @@
         </div>
 
         <nav class="flex-1 space-y-1 px-3 py-5">
-          <a href="?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7H10v7H4a1 1 0 0 1-1-1z"/></svg>
             Tableau de bord
           </a>
-          <a href="?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
             Ajouter un equipement
           </a>
-          <a href="?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Liste des equipements
           </a>
-          <a href="?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="8.5" cy="7" r="4"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
             </svg>
             Ajouter un emprunteur
           </a>
@@ -89,19 +90,30 @@
                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Lister les emprunteurs
           </a>
-          <a href="?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
             Enregistrer un emprunt
           </a>
-          <a href="?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
-                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <a href="{% url 'equipement:dashboard' %}?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Lister des emprunts effectifs
           </a>
-          <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
+          <a href="{% url 'equipement:dashboard' %}?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Import Excel
           </a>
-      
+          <!-- NOUVEAU lien : Emprunts en retard dans la sidebar -->
+          <a href="{% url 'equipement:overdue_emprunts' %}" class="nav-link {% if request.resolver_match.url_name == 'overdue_emprunts' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+            Emprunts en retard
+            {% if has_overdue %}
+              <span class="ml-auto flex items-center justify-center h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold">
+                {{ overdue_count }}
+              </span>
+            {% endif %}
+          </a>
         </nav>
 
         <div class="border-t border-white/10 px-3 py-4">
@@ -112,10 +124,86 @@
         </div>
       </aside>
 
+      <!-- Contenu principal -->
       <div class="flex flex-1 flex-col">
         <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
           <h1 class="text-xl font-bold text-greenBrand-700">{% block page_title %}Tableau de bord{% endblock %}</h1>
+
           <div class="flex items-center gap-3">
+
+            <!-- ================================================
+                 CLOCHE DE NOTIFICATION
+                 ================================================ -->
+            <div class="relative" id="notif-container">
+              <button
+                id="notif-btn"
+                onclick="toggleNotifDropdown()"
+                class="relative flex items-center justify-center h-10 w-10 rounded-lg transition focus:outline-none {% if has_overdue %}bg-red-50 hover:bg-red-100{% else %}bg-slate-100 hover:bg-slate-200{% endif %}"
+                title="Notifications emprunts"
+                aria-haspopup="true"
+                aria-expanded="false"
+              >
+                <!-- Icône cloche -->
+                <svg class="h-5 w-5 {% if has_overdue %}text-red-600{% else %}text-slate-400{% endif %}"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6 6 0 0 0-5-5.917V4a1 1 0 0 0-2 0v1.083A6 6 0 0 0 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/>
+                </svg>
+                <!-- Badge rouge animé -->
+                {% if has_overdue %}
+                <span id="notif-badge"
+                      class="absolute -top-1 -right-1 flex items-center justify-center h-5 w-5
+                             bg-red-600 text-white text-xs font-bold rounded-full animate-pulse">
+                  {{ overdue_count }}
+                </span>
+                {% endif %}
+              </button>
+
+              <!-- Dropdown -->
+              <div id="notif-dropdown"
+                   class="hidden absolute right-0 top-12 z-50 w-80 rounded-xl border border-slate-200 bg-white shadow-xl overflow-hidden"
+                   role="menu">
+
+                <!-- En-tête -->
+                <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50">
+                  <div class="flex items-center gap-2">
+                    <svg class="h-4 w-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                    </svg>
+                    <span class="text-sm font-semibold text-slate-700">Emprunts en retard</span>
+                  </div>
+                  <span id="notif-count-label"
+                        class="px-2 py-0.5 rounded-full text-xs font-bold {% if has_overdue %}bg-red-100 text-red-700{% else %}bg-slate-200 text-slate-500{% endif %}">
+                    {{ overdue_count }} retard{{ overdue_count|pluralize }}
+                  </span>
+                </div>
+
+                <!-- Liste (chargée en AJAX) -->
+                <div id="notif-list" class="max-h-72 overflow-y-auto divide-y divide-slate-100">
+                  <div id="notif-loading" class="flex items-center justify-center py-8 gap-2 text-slate-400">
+                    <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"/>
+                    </svg>
+                    <span class="text-sm">Chargement...</span>
+                  </div>
+                </div>
+
+                <!-- Pied -->
+                <div class="px-4 py-3 border-t border-slate-100 bg-slate-50">
+                  <a href="{% url 'equipement:overdue_emprunts' %}"
+                     class="flex items-center justify-center gap-2 w-full rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 transition">
+                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+                    </svg>
+                    Voir tous les retards
+                  </a>
+                </div>
+              </div>
+            </div>
+            <!-- FIN CLOCHE -->
+
+            <!-- Avatar gestionnaire -->
             <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
               <div class="grid h-7 w-7 place-items-center rounded-full bg-greenBrand-600 text-xs font-bold text-white">
                 {{ request.user.prenom|first|upper }}{{ request.user.nom|first|upper }}
@@ -123,6 +211,7 @@
               <span class="text-sm font-medium text-slate-700">{{ request.user.prenom }} {{ request.user.nom }}</span>
               <span class="rounded-full bg-greenBrand-100 px-2 py-0.5 text-xs font-semibold text-greenBrand-700">Gestionnaire</span>
             </div>
+
             <a href="{% url 'equipement:logout' %}" class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
               <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/>
@@ -155,5 +244,127 @@
         </main>
       </div>
     </div>
+
+    <!-- Overlay pour fermer le dropdown en cliquant ailleurs -->
+    <div id="notif-overlay" class="hidden fixed inset-0 z-40" onclick="closeNotifDropdown()"></div>
+
+    <!-- ================================================
+         SCRIPT CLOCHE DE NOTIFICATION
+         ================================================ -->
+    <script>
+    (function () {
+      var loaded = false;
+
+      window.toggleNotifDropdown = function () {
+        var dropdown = document.getElementById('notif-dropdown');
+        var overlay  = document.getElementById('notif-overlay');
+        var btn      = document.getElementById('notif-btn');
+        var isOpen   = !dropdown.classList.contains('hidden');
+
+        if (isOpen) {
+          closeNotifDropdown();
+        } else {
+          dropdown.classList.remove('hidden');
+          overlay.classList.remove('hidden');
+          btn.setAttribute('aria-expanded', 'true');
+          if (!loaded) fetchNotifications();
+        }
+      };
+
+      window.closeNotifDropdown = function () {
+        document.getElementById('notif-dropdown').classList.add('hidden');
+        document.getElementById('notif-overlay').classList.add('hidden');
+        document.getElementById('notif-btn').setAttribute('aria-expanded', 'false');
+      };
+
+      // Fermer avec Echap
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeNotifDropdown();
+      });
+
+      function fetchNotifications() {
+        fetch("{% url 'equipement:notifications_api' %}", {
+          headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          loaded = true;
+          renderNotifications(data);
+        })
+        .catch(function() {
+          document.getElementById('notif-list').innerHTML =
+            '<p class="text-center text-sm text-slate-400 py-6">Impossible de charger les notifications.</p>';
+        });
+      }
+
+      function renderNotifications(data) {
+        var list = document.getElementById('notif-list');
+        var countLabel = document.getElementById('notif-count-label');
+        var badge = document.getElementById('notif-badge');
+
+        // Mettre à jour le compteur
+        if (countLabel) {
+          countLabel.textContent = data.count + ' retard' + (data.count > 1 ? 's' : '');
+        }
+        if (badge) {
+          badge.textContent = data.count;
+        }
+
+        if (data.count === 0) {
+          list.innerHTML = [
+            '<div class="flex flex-col items-center justify-center py-10 gap-2 text-slate-400">',
+            '  <svg class="h-10 w-10 opacity-40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">',
+            '    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>',
+            '  </svg>',
+            '  <p class="text-sm font-medium">Aucun emprunt en retard</p>',
+            '</div>'
+          ].join('');
+          return;
+        }
+
+        var overdueUrl = "{% url 'equipement:overdue_emprunts' %}";
+
+        list.innerHTML = data.notifications.map(function(n) {
+          var urgency = n.days_overdue >= 7 ? 'red' : n.days_overdue >= 3 ? 'orange' : 'yellow';
+          var colors = {
+            red:    { bg: 'bg-red-50',    border: 'border-red-400',    badge: 'bg-red-100 text-red-700'       },
+            orange: { bg: 'bg-orange-50', border: 'border-orange-400', badge: 'bg-orange-100 text-orange-700' },
+            yellow: { bg: 'bg-yellow-50', border: 'border-yellow-400', badge: 'bg-yellow-100 text-yellow-700' },
+          };
+          var c = colors[urgency];
+          var materielsText = n.materiels.length > 0
+            ? n.materiels.join(', ') + (n.materiels.length >= 3 ? '…' : '')
+            : 'Aucun matériel';
+
+          return [
+            '<div class="flex gap-3 px-4 py-3 ' + c.bg + ' hover:brightness-95 transition cursor-pointer border-l-4 ' + c.border + '"',
+            '     onclick="window.location.href=\'' + overdueUrl + '\'">',
+            '  <div class="flex-1 min-w-0">',
+            '    <div class="flex items-center justify-between gap-2">',
+            '      <p class="text-sm font-semibold text-slate-800 truncate">' + escHtml(n.emprunteur) + '</p>',
+            '      <span class="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-bold ' + c.badge + '">+' + n.days_overdue + 'j</span>',
+            '    </div>',
+            '    <p class="text-xs text-slate-500 mt-0.5">Prévu le ' + escHtml(n.date_retour_prevue) + '</p>',
+            '    <p class="text-xs text-slate-400 truncate mt-0.5">' + escHtml(materielsText) + '</p>',
+            '  </div>',
+            '</div>'
+          ].join('');
+        }).join('');
+      }
+
+      // Sécurité : échapper le HTML pour éviter les injections XSS
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      // Réinitialiser le cache toutes les 2 minutes (rechargement à la prochaine ouverture)
+      setInterval(function () { loaded = false; }, 120000);
+    })();
+    </script>
+
   </body>
 </html>

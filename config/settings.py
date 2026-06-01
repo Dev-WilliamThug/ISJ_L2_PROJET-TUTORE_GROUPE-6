@@ -64,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'equipement.context_processors.overdue_count',
             ],
         },
     },
@@ -86,11 +87,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'gestionEquipement',
         'USER': 'postgres',
-        'PASSWORD': 'pass',
+        'PASSWORD': 'Snyfflorent',
         'HOST': 'localhost',
         'PORT': '5432',
     }
 }
+
+# 👇 Ajoute cette ligne juste ici
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # Password validation
@@ -112,22 +116,23 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
 EMAIL_HOST_USER = 'jeanemmanuelmahop@gmail.com'
-EMAIL_HOST_PASSWORD = 'flnabgmkmtcvrrbr'       # Mot de passe d'application Google
-DEFAULT_FROM_EMAIL = 'jeanemmanuelmahop@gmail.com'  # ← manquait
-EMAIL_TIMEOUT = 10                                  # ← évite un hang silencieux
+EMAIL_HOST_PASSWORD = 'flnabgmkmtcvrrbr'
+DEFAULT_FROM_EMAIL = 'jeanemmanuelmahop@gmail.com'
+EMAIL_TIMEOUT = 10                               # ← évite un hang silencieux
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'fr-fr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Douala'  # UTC+1, Cameroun
+USE_TZ = True
 
 USE_I18N = True
 
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)

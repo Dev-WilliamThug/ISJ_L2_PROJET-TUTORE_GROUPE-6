@@ -23,19 +23,34 @@ class MaterielForm(forms.ModelForm):
             field.widget.attrs["placeholder"] = f"Saisir {field.label.lower()}"
         
         
-        dernier_materiel = Materiel.objects.order_by('id_materiel').last()
-        nouvel_id = _next_prefixed_id(
-            dernier_materiel.id_materiel if dernier_materiel else None,
-            "EQ",
-            Materiel.objects.count(),
-        )
-
-        
-        self.fields['id_materiel'].initial = nouvel_id
         self.fields['id_materiel'].widget.attrs['readonly'] = True
-        self.fields["id_materiel"].help_text = "ID genere automatiquement."
         self.fields['id_materiel'].widget.attrs['class'] = 'field bg-slate-100'
-        self.fields["id_materiel"].widget.attrs["placeholder"] = nouvel_id
+        self.fields['id_materiel'].help_text = (
+            "ID généré automatiquement à partir du nom et du numéro de série."
+        )
+        self.fields['id_materiel'].required = False
+        self.fields['id_materiel'].widget.attrs[
+            'placeholder'
+        ] = 'Généré à partir du nom + numéro de série'
+
+    def clean(self):
+        cleaned = super().clean()
+        nom = cleaned.get("nom")
+        numero_serie = cleaned.get("numero_serie")
+
+        if nom and numero_serie:
+            cleaned["id_materiel"] = Materiel.generate_identifiant(nom, numero_serie)
+        else:
+            self.add_error(
+                "nom",
+                "Le nom et le numéro de série sont nécessaires pour générer l'identifiant.",
+            )
+            self.add_error(
+                "numero_serie",
+                "Le nom et le numéro de série sont nécessaires pour générer l'identifiant.",
+            )
+
+        return cleaned
 
     class Meta:
         model = Materiel
