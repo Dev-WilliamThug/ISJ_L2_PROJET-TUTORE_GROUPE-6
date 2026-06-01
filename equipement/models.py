@@ -112,8 +112,10 @@ class Classe(models.Model):
 
     def __str__(self):
         return self.nom
-
-
+    @property
+    def get_id(self):
+        return self.id
+    
 class Tierce(models.Model):
 
     class TypeTierce(models.TextChoices):
@@ -207,7 +209,7 @@ class Emprunt(models.Model):
         verbose_name_plural = "Emprunts"
 
     def __str__(self):
-        return f"Emprunt #{self.id} - {self.emprunteur.get_full_name()}"
+        return f"{self.materiels} - {self.emprunteur}"
 
 
 class LigneEmprunt(models.Model):

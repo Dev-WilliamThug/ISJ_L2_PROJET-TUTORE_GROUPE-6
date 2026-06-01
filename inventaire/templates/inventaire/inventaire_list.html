@@ -19,19 +19,6 @@
       Nouvel inventaire
     </a>
   </div>
-
-  {# ── Messages ── #}
-  {% if messages %}
-    {% for message in messages %}
-      <div class="rounded-lg border px-4 py-3 text-sm font-medium
-        {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
-        {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
-        {% else %}border-blue-200 bg-blue-50 text-blue-700{% endif %}">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
-
   {# ── Tableau ── #}
   <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
     <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
