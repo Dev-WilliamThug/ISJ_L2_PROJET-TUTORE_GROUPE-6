@@ -149,7 +149,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                         f"Utilisateur {user.prenom} {user.nom} enregistré avec succès. "
                         f"Un email contenant ses identifiants a été envoyé à {user.email}.",
                     )
-                    return redirect(f"{reverse('users:dashboard')}?tab=active")
+                    return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/actifs")
 
                 except Exception as exc:
                     messages.error(
@@ -190,7 +190,7 @@ def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
                 request,
                 f"Les informations de {target.prenom} {target.nom} ont été mises à jour.",
             )
-            return redirect(f"{reverse('users:dashboard')}?tab=active")
+            return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/actifs")
         else:
             messages.error(request, "Veuillez corriger les erreurs du formulaire.")
     else:
@@ -208,14 +208,14 @@ def deactivate_user(request: HttpRequest, user_id: int) -> HttpResponse:
 
     if target == request.user:
         messages.error(request, "Vous ne pouvez pas vous désactiver vous-même.")
-        return redirect(f"{reverse('users:dashboard')}?tab=active")
+        return redirect(f"{reverse('users:dashboard')}?tab=utilisateurs/actifs")
 
     if target.is_active:
         target.is_active = False
         target.save(update_fields=["is_active"])
 
     messages.success(request, "Utilisateur désactivé.")
-    return redirect(f"{reverse('users:dashboard')}?tab=disabled")
+    return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/desactives")
 
 
 
@@ -230,7 +230,7 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
         target.save(update_fields=["is_active"])
 
     messages.success(request, "Utilisateur activé.")
-    return redirect(f"{reverse('users:dashboard')}?tab=active")
+    return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/actifs")
 
  
 def validate_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
@@ -238,7 +238,7 @@ def validate_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
     emprunt.statut = Emprunt.Statut.APPROUVE
     emprunt.save(update_fields=["statut"])
     messages.success(request, "Emprunt validé.")
-    return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
+    return redirect(f"{reverse('users:dashboard')}?tab=emprunts")
  
 
 def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
@@ -246,6 +246,6 @@ def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
     emprunt.statut = Emprunt.Statut.REFUSE
     emprunt.save(update_fields=["statut"])
     messages.success(request, "Emprunt refusé.")
-    return redirect(f"{reverse('users:dashboard')}?tab=listeemprunts")
+    return redirect(f"{reverse('users:dashboard')}?tab=emprunts")
  
  

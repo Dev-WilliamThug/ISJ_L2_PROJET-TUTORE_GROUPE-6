@@ -352,7 +352,7 @@ def exporter_excel(request):
     ws = wb.active
     ws.title = "Materiels"
 
-    headers = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque']
+    headers = ['id_materiel', 'nom', 'couleur', 'categorie', 'etat', 'marque','numero_serie ']
     ws.append(headers)
 
     for m in Materiel.objects.all():
@@ -363,6 +363,7 @@ def exporter_excel(request):
             m.categorie or "",
             m.etat or "",
             m.marque or "",
+            m.numero_serie or "",
         ])
 
     response = HttpResponse(
