@@ -15,6 +15,8 @@ from users.forms import LoginForm
 from users.models import CustomUser
 from .form import EditEmprunteurForm, EditMaterielForm, EnregistrerEmprunteurForm, MaterielForm, EmpruntForm
 from .models import Materiel,Classe,Tierce, Emprunt, LigneEmprunt,Operation
+from .pdf_utils import build_simple_pdf
+from .rules import materiel_a_un_emprunt_en_cours
 
 
 def manager_required(view_func):
@@ -67,13 +69,13 @@ def logout_view(request: HttpRequest) -> HttpResponse:
 def register_materiel(request: HttpRequest, form: MaterielForm) -> HttpResponse:
     if request.method != "POST":
         messages.error(request, "Action non autorisee.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=add")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/ajouter")
     if form.is_valid():
         form.save()
         messages.success(request, "Equipement enregistre avec succes.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     messages.error(request, "Veuillez corriger les erreurs du formulaire equipement.")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=add")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/ajouter")
 
 
 @login_required
@@ -101,13 +103,13 @@ def edit_equipement(request: HttpRequest, materiel_id: str) -> HttpResponse:
 def register_emprunteur(request: HttpRequest, form: EnregistrerEmprunteurForm) -> HttpResponse:
     if request.method != "POST":
         messages.error(request, "Action non autorisee.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=register")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/ajouter")
     if form.is_valid():
         form.save()
         messages.success(request, "Emprunteur enregistre avec succes.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/liste")
     messages.error(request, "Veuillez corriger les erreurs du formulaire emprunteur.")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=register")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/ajouter")
 
 
 @login_required
@@ -167,6 +169,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     materiels_disponibles = [m for m in materiels_total if m.est_disponible()]
     materiels_en_pret = [m for m in materiels_total if m.est_en_pret()]
     materiels_en_maintenance = [m for m in materiels_total if m.est_en_maintenance()]
+    materiels_hors_service = Materiel.objects.filter(etat="HORS SERVICE").order_by("nom", "id_materiel")
+    emprunts_non_rendus = Emprunt.objects.filter(
+        statut=Emprunt.Statut.APPROUVE,
+        date_retour_reelle__isnull=True,
+    ).select_related("emprunteur").prefetch_related("lignes__materiel").order_by("-date_operation")
+    equipements_non_rendus_count = sum(emprunt.lignes.count() or 1 for emprunt in emprunts_non_rendus)
     if request.method == "POST":
 
         if action == "register_materiel":
@@ -194,6 +202,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "materiels_disponibles": materiels_disponibles,
         "materiels_en_pret": materiels_en_pret,
         "materiels_en_maintenance": materiels_en_maintenance,
+        "materiels_hors_service": materiels_hors_service,
+        "emprunts_non_rendus": emprunts_non_rendus,
+        "equipements_non_rendus_count": equipements_non_rendus_count,
         "materiel_detail": materiel_detail,
         "editMaterielForm": editFormMateriel,
         "editEmprunteurForm": editFormEmprunteur,
@@ -204,8 +215,66 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "emprunt_recents": emprunt_recents,
         "categories": categories,
         "categorie_filtre": categorie_filtre,
+        "today_date": timezone.localdate(),
     }
     return render(request, "equipement/dashboard.html", context)
+
+
+@login_required
+def rapport_pdf(request: HttpRequest) -> HttpResponse:
+    materiels_hors_service = Materiel.objects.filter(etat="HORS SERVICE").order_by("nom", "id_materiel")
+    emprunts_non_rendus = Emprunt.objects.filter(
+        statut=Emprunt.Statut.APPROUVE,
+        date_retour_reelle__isnull=True,
+    ).select_related("emprunteur").prefetch_related("lignes__materiel").order_by("-date_operation")
+
+    generated_at = timezone.localtime(timezone.now()).strftime("%d/%m/%Y %H:%M")
+    lines = [
+        f"Genere le : {generated_at}",
+        f"Nombre d'equipements hors service : {materiels_hors_service.count()}",
+        f"Nombre d'equipements non rendus : {sum(emprunt.lignes.count() or 1 for emprunt in emprunts_non_rendus)}",
+        "",
+        "## Equipements hors service",
+    ]
+
+    if materiels_hors_service.exists():
+        for materiel in materiels_hors_service:
+            lines.append(
+                f"- {materiel.id_materiel} | {materiel.nom} | {materiel.get_categorie_display()} | "
+                f"Marque: {materiel.marque} | Serie: {materiel.numero_serie} | Couleur: {materiel.couleur}"
+            )
+    else:
+        lines.append("Aucun equipement hors service.")
+
+    lines.extend(["", "## Equipements non rendus"])
+    if emprunts_non_rendus.exists():
+        for emprunt in emprunts_non_rendus:
+            emprunteur = emprunt.emprunteur
+            materiels = list(emprunt.lignes.all())
+            if materiels:
+                for ligne in materiels:
+                    materiel = ligne.materiel
+                    lines.append(
+                        f"- {materiel.id_materiel} | {materiel.nom} | Dernier emprunteur: "
+                        f"{emprunteur.prenom} {emprunteur.nom} ({emprunteur.id_Tierce}) | "
+                        f"Date emprunt: {emprunt.date_operation:%d/%m/%Y} | Retour prevu: "
+                        f"{emprunt.date_retour_prevue or 'Non renseigne'}"
+                    )
+            else:
+                materiel = emprunt.materiels
+                lines.append(
+                    f"- {materiel.id_materiel} | {materiel.nom} | Dernier emprunteur: "
+                    f"{emprunteur.prenom} {emprunteur.nom} ({emprunteur.id_Tierce}) | "
+                    f"Date emprunt: {emprunt.date_operation:%d/%m/%Y} | Retour prevu: "
+                    f"{emprunt.date_retour_prevue or 'Non renseigne'}"
+                )
+    else:
+        lines.append("Aucun equipement non rendu.")
+
+    pdf = build_simple_pdf("Rapport des equipements", lines)
+    response = HttpResponse(pdf, content_type="application/pdf")
+    response["Content-Disposition"] = 'attachment; filename="rapport_equipements.pdf"'
+    return response
 
 
 def detail_materiel(request, materiel_id):
@@ -216,12 +285,12 @@ def detail_materiel(request, materiel_id):
 def retirer_materiel(request, materiel_id):
     if request.method != "POST":
         messages.error(request, "Action non autorisee.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     materiel = get_object_or_404(Materiel, id_materiel=materiel_id)
     nom = materiel.nom
     materiel.delete()
     messages.success(request, f"Equipement {nom} retire avec succes.")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
 
 
 
@@ -245,7 +314,7 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                 if indisponibles:
                     noms = ", ".join(m.nom for m in indisponibles)
                     messages.error(request, f"Matériel(s) non disponible(s) : {noms}")
-                    return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
+                    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
 
             emprunt = Emprunt.objects.create(
                 materiels=materiels_choisis[0],
@@ -268,11 +337,14 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                 request,
                 f"Emprunt enregistré avec succès ({len(materiels_choisis)} équipement(s), statut : {emprunt.get_statut_display()})."
             )
-            return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
+            return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/liste")
 
-        messages.error(request, "Erreur dans le formulaire.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=creer_emprunt")
+        erreurs = []
+        for field_errors in form.errors.values():
+            erreurs.extend(field_errors)
+        messages.error(request, " ".join(erreurs) or "Erreur dans le formulaire.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
 
 
 def exporter_excel(request):
@@ -324,6 +396,7 @@ def import_materiels(request):
 
     importes = 0
     ignores = 0
+    etats_bloques = 0
 
     valeurs_valides = [c[0] for c in Materiel.ETAT_CHOICES]
 
@@ -349,23 +422,30 @@ def import_materiels(request):
         if etat not in valeurs_valides:
             etat = "DISPONIBLE"
 
-        Materiel.objects.update_or_create(
-            id_materiel=id_materiel,
-            defaults={
-                "nom": nom,
-                "couleur": couleur,
-                "categorie": categorie,
-                "etat": etat,
-                "marque": marque,
-            }
-        )
+        defaults = {
+            "nom": nom,
+            "couleur": couleur,
+            "categorie": categorie,
+            "etat": etat,
+            "marque": marque,
+        }
+        materiel_existant = Materiel.objects.filter(id_materiel=id_materiel).first()
+        if (
+            materiel_existant
+            and materiel_existant.etat != etat
+            and materiel_a_un_emprunt_en_cours(materiel_existant)
+        ):
+            defaults["etat"] = materiel_existant.etat
+            etats_bloques += 1
+
+        Materiel.objects.update_or_create(id_materiel=id_materiel, defaults=defaults)
         importes += 1
 
     messages.success(
         request,
         f"Import terminé : {importes} lignes traitées, {ignores} ignorées."
     )
-    return redirect(f"{reverse('equipement:dashboard')}?tab=list")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
 
 
 def detail_materiel(request, materiel_id):
@@ -381,13 +461,13 @@ def detail_emprunteur(request, emprunteur_id):
 def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
     if request.method != "POST":
         messages.error(request, "Action non autorisee.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/liste")
 
     emprunteur = get_object_or_404(Tierce, id_Tierce=emprunteur_id)
     nom_complet = f"{emprunteur.prenom} {emprunteur.nom}".strip()
     emprunteur.delete()
     messages.success(request, f"Emprunteur {nom_complet} supprime avec succes.")
-    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunteurs")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/liste")
 
 def import_emprunts(request):
     if request.method != "POST":

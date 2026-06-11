@@ -132,6 +132,39 @@
           </a>
         </div>
       </div>
+
+      <section class="space-y-4">
+        <div>
+          <h2 class="text-lg font-bold text-navy-800">Analyse des emprunts</h2>
+          <p class="mt-1 text-sm text-slate-500">Suivi des demandes, du stock et des utilisateurs les plus actifs.</p>
+        </div>
+        <div class="grid gap-4 lg:grid-cols-2">
+          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Equipements les plus empruntes</h3>
+            <div class="mt-4 h-72">
+              <canvas id="topMaterielsChart"></canvas>
+            </div>
+          </article>
+          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Renouvellement de stock</h3>
+            <div class="mt-4 h-72">
+              <canvas id="renouvellementChart"></canvas>
+            </div>
+          </article>
+          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft lg:col-span-2">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Periodes d'utilisation</h3>
+            <div class="mt-4 h-80">
+              <canvas id="utilisationChart"></canvas>
+            </div>
+          </article>
+          <article class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft lg:col-span-2">
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-500">Utilisateurs qui empruntent le plus</h3>
+            <div class="mt-4 h-72">
+              <canvas id="topEmprunteursChart"></canvas>
+            </div>
+          </article>
+        </div>
+      </section>
       
     </section>
   {% endif %}
@@ -467,4 +500,72 @@
     </section>
   {% endif %}
 
+{% endblock %}
+
+{% block scripts %}
+  {{ block.super }}
+  {% if tab == 'dashboard' %}
+    <script>
+      (function () {
+        const chartData = {{ admin_chart_data_json|safe }};
+        const baseOptions = {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: { precision: 0 }
+            }
+          }
+        };
+
+        function barChart(id, title, payload, color) {
+          const canvas = document.getElementById(id);
+          if (!canvas || !window.Chart) return;
+          new Chart(canvas, {
+            type: "bar",
+            data: {
+              labels: payload.labels,
+              datasets: [{
+                label: title,
+                data: payload.values,
+                backgroundColor: color,
+                borderRadius: 6
+              }]
+            },
+            options: baseOptions
+          });
+        }
+
+        function lineChart(id, payload) {
+          const canvas = document.getElementById(id);
+          if (!canvas || !window.Chart) return;
+          new Chart(canvas, {
+            type: "line",
+            data: {
+              labels: payload.labels,
+              datasets: [{
+                label: "Nombre d'emprunts",
+                data: payload.values,
+                borderColor: "#2563eb",
+                backgroundColor: "rgba(37, 99, 235, 0.12)",
+                fill: true,
+                tension: 0.35,
+                pointRadius: 4
+              }]
+            },
+            options: baseOptions
+          });
+        }
+
+        barChart("topMaterielsChart", "Emprunts", chartData.top_materiels, "#2563eb");
+        barChart("renouvellementChart", "Score de demande", chartData.renouvellement, "#ea580c");
+        lineChart("utilisationChart", chartData.utilisation);
+        barChart("topEmprunteursChart", "Equipements empruntes", chartData.top_emprunteurs, "#16a34a");
+      })();
+    </script>
+  {% endif %}
 {% endblock %}

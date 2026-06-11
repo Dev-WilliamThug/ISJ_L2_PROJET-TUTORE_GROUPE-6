@@ -20,6 +20,7 @@ from equipement.models import (
     Emprunt, 
     Materiel
 )
+from equipement.analytics import get_admin_chart_data
 
 
 
@@ -167,6 +168,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "statuts_emprunt": Emprunt.Statut.choices,
         "inventaires": inventaires,
     }
+    context.update(get_admin_chart_data())
     return render(request, "users/dashboard.html", context)
 
 

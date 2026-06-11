@@ -82,19 +82,6 @@
           </div>
           <h2 class="text-2xl font-bold text-navy-800">Connexion</h2>
 
-          {% if messages %}
-            <div class="mt-4 space-y-2" role="status" aria-live="polite">
-              {% for message in messages %}
-                <div class="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium
-                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
-                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
-                  {% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-
           <form method="post" class="mt-5 space-y-4" novalidate>
             {% csrf_token %}
 

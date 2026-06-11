@@ -97,6 +97,10 @@
                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
             Lister des emprunts effectifs
           </a>
+          <a href="?tab=rapports" class="nav-link {% if tab == 'rapports' %}active{% endif %}">
+            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h8M8 17h5"/></svg>
+            Rapports
+          </a>
           <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             Import Excel
@@ -133,24 +137,6 @@
         </header>
 
         <main class="flex-1 p-6">
-          {% if messages %}
-            <div class="mb-5 space-y-2" role="status" aria-live="polite">
-              {% for message in messages %}
-                <div class="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium
-                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
-                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
-                  {% else %}border-slate-200 bg-white text-slate-700{% endif %}">
-                  {% if 'success' in message.tags %}
-                    <svg class="h-4 w-4 shrink-0 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/></svg>
-                  {% elif 'error' in message.tags %}
-                    <svg class="h-4 w-4 shrink-0 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/></svg>
-                  {% endif %}
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-
           {% block content %}{% endblock %}
         </main>
       </div>

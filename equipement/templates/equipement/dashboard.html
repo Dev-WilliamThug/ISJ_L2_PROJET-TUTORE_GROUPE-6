@@ -26,12 +26,6 @@
         </article>
       </div>
       <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-        <h2 class="text-lg font-bold text-slate-800">Statistiques parc informatique</h2>
-        <div class="mt-4">
-          <canvas id="stats_parcInformatique" class="w-full h-64"></canvas>
-        </div>
-      </section>
-      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
         {% if emprunt_recents %}
           <h2 class="text-lg font-bold text-slate-800">Emprunts récents</h2>
           <ul class="mt-4 space-y-3">
@@ -45,7 +39,7 @@
                   <p class="mt-1 text-xs text-slate-500">Emprunté : {{ emprunt.materiels.nom }} ({{ emprunt.materiels.id_materiel }})</p>
                 </div>
                 <div>
-                  <p class="text-sm text-slate-600">Le {{ emprunt.date_operation|date:"d M Y H:i" }}</p>
+                  <p class="text-sm text-slate-600">Le {{ emprunt.date_operation }}</p>
                   <p class="text-xs text-slate-400">{{ emprunt.get_statut_display }}</p>
                 </div>
               </li>
@@ -104,20 +98,20 @@
         <table class="min-w-full divide-y divide-slate-100">
           <thead class="bg-slate-50">
             <tr>
-              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Code</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Etat</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Couleur</th>
               <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
             {% for equipement in materiels_total %}
               <tr class="hover:bg-slate-50">
-                <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
                 <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_categorie_display }}</td>
-                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_etat_display }}</td>
+                <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.couleur }}</td>
                 <td class="px-5 py-3">
                   <div class="flex flex-wrap items-center gap-2">
                     <a href="{% url 'equipement:detail_materiel' equipement.id_materiel %}" class="btn-secondary px-3 py-1.5 text-xs">Details</a>
@@ -295,7 +289,7 @@
 
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Date d'emprunt</label>
-          <input type="datetime-local" name="date_operation" value="{{ formEmprunt.date_operation.value|default:'' }}" required class="field w-full" />
+          <input type="datetime-local" name="date_operation" value="{{ formEmprunt.date_operation.value|default:'' }}" min="{{ today_date|date:'Y-m-d' }}T00:00" required class="field w-full" />
           {% for error in formEmprunt.date_operation.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
 
@@ -332,7 +326,7 @@
 
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Date de retour prévue</label>
-          <input type="date" name="date_retour_prevue" required class="field w-full" />
+          <input type="date" name="date_retour_prevue" min="{{ today_date|date:'Y-m-d' }}" required class="field w-full" />
         </div>
 
         <div>
@@ -420,6 +414,100 @@
           </tbody>
         </table>
       </div>
+    </section>
+  {% endif %}
+
+  {% if tab == 'rapports' %}
+    <section class="space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-lg font-bold text-slate-800">Rapport des equipements</h2>
+          <p class="mt-1 text-sm text-slate-500">Synthese des equipements hors service et des equipements non rendus.</p>
+        </div>
+        <a href="{% url 'equipement:rapport_pdf' %}" class="btn-primary">Generer le PDF</a>
+      </div>
+
+      <div class="grid gap-4 sm:grid-cols-2">
+        <article class="rounded-xl border border-red-100 bg-white p-5 shadow-soft">
+          <p class="text-sm font-medium text-slate-500">Equipements hors service</p>
+          <p class="mt-1 text-4xl font-bold text-red-600">{{ materiels_hors_service|length }}</p>
+        </article>
+        <article class="rounded-xl border border-amber-100 bg-white p-5 shadow-soft">
+          <p class="text-sm font-medium text-slate-500">Equipements non rendus</p>
+          <p class="mt-1 text-4xl font-bold text-amber-600">{{ equipements_non_rendus_count }}</p>
+        </article>
+      </div>
+
+      <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+        <div class="border-b border-slate-100 px-6 py-4">
+          <h3 class="font-bold text-slate-800">Equipements hors service</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Code</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Categorie</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Marque</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Serie</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for equipement in materiels_hors_service %}
+                <tr class="hover:bg-slate-50">
+                  <td class="px-5 py-3 text-sm font-semibold text-slate-700">{{ equipement.id_materiel }}</td>
+                  <td class="px-5 py-3 text-sm text-slate-700">{{ equipement.nom }}</td>
+                  <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.get_categorie_display }}</td>
+                  <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.marque }}</td>
+                  <td class="px-5 py-3 text-sm text-slate-600">{{ equipement.numero_serie }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" class="px-5 py-6 text-center text-sm text-slate-500">Aucun equipement hors service.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+        <div class="border-b border-slate-100 px-6 py-4">
+          <h3 class="font-bold text-slate-800">Equipements non rendus</h3>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Materiel</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Dernier emprunteur</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Date d'emprunt</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Retour prevu</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for emprunt in emprunts_non_rendus %}
+                {% for ligne in emprunt.lignes.all %}
+                  <tr class="hover:bg-slate-50">
+                    <td class="px-5 py-3 text-sm text-slate-700">{{ ligne.materiel.nom }} ({{ ligne.materiel.id_materiel }})</td>
+                    <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur.prenom }} {{ emprunt.emprunteur.nom }}</td>
+                    <td class="px-5 py-3 text-sm text-slate-600">{{ emprunt.date_operation|date:"d/m/Y" }}</td>
+                    <td class="px-5 py-3 text-sm text-slate-600">{{ emprunt.date_retour_prevue|default:"Non renseigne" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr class="hover:bg-slate-50">
+                    <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.materiels.nom }} ({{ emprunt.materiels.id_materiel }})</td>
+                    <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur.prenom }} {{ emprunt.emprunteur.nom }}</td>
+                    <td class="px-5 py-3 text-sm text-slate-600">{{ emprunt.date_operation|date:"d/m/Y" }}</td>
+                    <td class="px-5 py-3 text-sm text-slate-600">{{ emprunt.date_retour_prevue|default:"Non renseigne" }}</td>
+                  </tr>
+                {% endfor %}
+              {% empty %}
+                <tr><td colspan="4" class="px-5 py-6 text-center text-sm text-slate-500">Aucun equipement non rendu.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
     </section>
   {% endif %}
 

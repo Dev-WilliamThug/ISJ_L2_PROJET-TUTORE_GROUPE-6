@@ -10,6 +10,7 @@ urlpatterns = [
     path("equipement/dashboard/", views.dashboard, name="dashboard"),
     path("equipement/exporter/", views.exporter_excel, name="exporter_excel"),
     path("equipement/importer/", views.import_materiels, name="import_materiels"),
+    path("equipement/rapport/pdf/", views.rapport_pdf, name="rapport_pdf"),
     path("emprunts/importer/", views.import_emprunts, name="import_emprunts"),
     path("equipement/<str:materiel_id>/retirer/", views.retirer_materiel, name="retirer_materiel"),
     path("equipement/<str:materiel_id>/detail/", views.detail_materiel, name="detail_materiel"),
