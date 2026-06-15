@@ -15,6 +15,6 @@ urlpatterns = [
     path("inventaire/<int:inventaire_id>/detail/", inventaire_views.inventaire_detail, name="inventaire_detail"),
     path("emprunt/<int:emprunt_id>/valider/", views.validate_emprunt, name="validate_emprunt"),
     path("emprunt/<int:emprunt_id>/refuser/", views.refuser_emprunt, name="refuser_emprunt"),
-
+    path("classes/<int:classe_id>/edit/",   views.edit_classe,   name="edit_classe"),
+    path("classes/<int:classe_id>/delete/", views.delete_classe, name="delete_classe"),
 ]
-

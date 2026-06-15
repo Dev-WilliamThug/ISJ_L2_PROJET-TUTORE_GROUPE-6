@@ -407,7 +407,7 @@
     </section>
   {% endif %}
 
-  {# ════════════════════════════════════════ INVENTAIRES ════════════════════════════════════════ #}
+
   {% if tab == 'inventaires' %}
     <section class="space-y-5">
 
@@ -500,10 +500,112 @@
     </section>
   {% endif %}
 
+  
+ {% if tab == 'classes/liste' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 class="text-lg font-bold text-navy-800">Salles de classe</h2>
+        <a href="?tab=classes/creer" class="btn-primary">
+          <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+          </svg>
+          Ajouter une classe
+        </a>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-slate-100">
+          <thead class="bg-slate-50">
+            <tr>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Nom</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Description</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Places</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Emprunteurs</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Créée le</th>
+              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for classe in classes %}
+              <tr class="hover:bg-slate-50">
+                <td class="px-5 py-3 text-sm font-semibold text-slate-800">{{ classe.nom }}</td>
+                <td class="px-5 py-3 text-sm text-slate-500">{{ classe.description|default:"—"|truncatechars:50 }}</td>
+                <td class="px-5 py-3 text-sm text-slate-700">
+                  {% if classe.nombre_places %}{{ classe.nombre_places }} places{% else %}<span class="text-slate-400">—</span>{% endif %}
+                </td>
+                <td class="px-5 py-3 text-sm text-slate-700">{{ classe.tierce_set.count }} emprunteur(s)</td>
+                <td class="px-5 py-3 text-sm text-slate-500">{{ classe.created_at|date:"d/m/Y" }}</td>
+                <td class="px-5 py-3">
+                  <div class="flex items-center gap-2">
+                    <a href="{% url 'users:edit_classe' classe.pk %}" class="btn-edit">Modifier</a>
+                    <form method="post" action="{% url 'users:delete_classe' classe.pk %}"
+                          onsubmit="return confirm('Supprimer la classe « {{ classe.nom }} » ? Cette action est irréversible.');">
+                      {% csrf_token %}
+                      <button type="submit" class="btn-danger">Supprimer</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="6" class="px-5 py-8 text-center text-sm text-slate-500">
+                  Aucune salle de classe enregistrée.
+                  <a href="?tab=classes/creer" class="ml-1 font-semibold text-primary-600 hover:underline">En créer une ?</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+
+
+  {% if tab == 'classes/creer' %}
+    <section class="mx-auto max-w-2xl rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="border-b border-slate-100 px-6 py-5">
+        <h2 class="text-lg font-bold text-navy-800">Ajouter une salle de classe</h2>
+        <p class="mt-1 text-sm text-slate-500">Les informations marquées d'un <span class="text-red-500">*</span> sont obligatoires.</p>
+      </div>
+      <form method="post" action="{% url 'users:dashboard' %}" class="space-y-5 px-6 py-6" novalidate>
+        {% csrf_token %}
+        <input type="hidden" name="action" value="register_classe">
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Nom de la classe <span class="text-red-500">*</span></label>
+            {{ classe_form.nom }}
+            {% if classe_form.nom.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ classe_form.nom.errors|join:", " }}</p>{% endif %}
+          </div>
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Description</label>
+            {{ classe_form.description }}
+            {% if classe_form.description.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ classe_form.description.errors|join:", " }}</p>{% endif %}
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-semibold text-slate-700">Nombre de places</label>
+            {{ classe_form.nombre_places }}
+            {% if classe_form.nombre_places.errors %}<p class="mt-1 text-xs font-medium text-red-600">{{ classe_form.nombre_places.errors|join:", " }}</p>{% endif %}
+          </div>
+        </div>
+        <div class="flex items-center gap-3 border-t border-slate-100 pt-4">
+          <button type="submit" class="btn-primary">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/>
+            </svg>
+            Enregistrer la classe
+          </button>
+          <a href="?tab=classes/liste" class="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
+            Annuler
+          </a>
+        </div>
+      </form>
+    </section>
+  {% endif %}
+
 {% endblock %}
 
 {% block scripts %}
   {{ block.super }}
+
   {% if tab == 'dashboard' %}
     <script>
       (function () {

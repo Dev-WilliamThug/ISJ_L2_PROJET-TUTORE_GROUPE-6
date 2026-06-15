@@ -471,169 +471,223 @@ def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse
     return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/liste")
 
 def import_emprunts(request):
+    """
+    Importe des emprunts depuis un fichier .xlsx.
+
+    Colonnes attendues (dans l'ordre) :
+        id | materiels | emprunteur | date_operation | date_retour_prevue | notes | statut
+
+    Règles métier appliquées :
+    - Si l'id correspond à un emprunt existant → mise à jour sans toucher à l'état des matériels.
+    - Un nouvel emprunt APPROUVE exige que tous ses matériels soient DISPONIBLES.
+    - Un emprunt RETOURNE doit avoir une date_retour_reelle ; si absente on utilise aujourd'hui.
+    - Un emprunt REFUSE ou EN_ATTENTE ne modifie pas l'état des matériels.
+    - La date de retour prévue ne peut pas être antérieure à la date d'opération.
+    """
+    TAB_RETOUR = "emprunts/liste"
+
     if request.method != "POST":
-        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+        return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
 
     fichier = request.FILES.get("file")
-
     if not fichier:
         messages.error(request, "Veuillez sélectionner un fichier.")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
-
+        return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
     if not fichier.name.endswith(".xlsx"):
         messages.error(request, "Fichier invalide (.xlsx requis).")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+        return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
 
     try:
         wb = openpyxl.load_workbook(fichier)
         ws = wb.active
     except Exception as e:
         messages.error(request, f"Erreur lecture fichier : {e}")
-        return redirect(f"{reverse('equipement:dashboard')}?tab=import")
+        return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
 
     importes = 0
     mis_a_jour = 0
     ignores = 0
     erreurs = []
 
-    valeurs_valides = [c[0] for c in Emprunt.Statut.choices]
+    statuts_valides = [c[0] for c in Emprunt.Statut.choices]
+    today = timezone.localdate()
+
+    def _parse_date(valeur: str):
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S"):
+            try:
+                return datetime.strptime(valeur, fmt).date()
+            except ValueError:
+                continue
+        return None
+
+    def _resoudre_emprunteur(nom_complet: str):
+        parties = nom_complet.strip().split()
+        obj = None
+        if len(parties) >= 2:
+            obj = (
+                Tierce.objects.filter(prenom__iexact=parties[0], nom__iexact=" ".join(parties[1:])).first()
+                or Tierce.objects.filter(nom__iexact=parties[0], prenom__iexact=" ".join(parties[1:])).first()
+            )
+        return obj or Tierce.objects.filter(nom__iexact=nom_complet).first()
+
+    def _resoudre_materiels(noms_bruts: str, numero_ligne: int):
+        objs, errs = [], []
+        for token in [n.strip() for n in noms_bruts.split(",") if n.strip()]:
+            try:
+                objs.append(Materiel.objects.get(nom__iexact=token))
+            except Materiel.DoesNotExist:
+                try:
+                    objs.append(Materiel.objects.get(id_materiel__iexact=token))
+                except Materiel.DoesNotExist:
+                    errs.append(f"Ligne {numero_ligne} : matériel '{token}' introuvable.")
+            except Materiel.MultipleObjectsReturned:
+                errs.append(f"Ligne {numero_ligne} : plusieurs matériels correspondent à '{token}', utilisez l'id_materiel.")
+        return objs, errs
 
     for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
 
         if not any(row):
-            ignores += 1
             continue
 
         row = [str(cell).strip() if cell is not None else "" for cell in row]
 
-        if len(row) < 6:
-            erreurs.append(f"Ligne {i} : pas assez de colonnes ({len(row)})")
+        if len(row) < 5:
+            erreurs.append(f"Ligne {i} : pas assez de colonnes ({len(row)}, minimum 5 attendues).")
             ignores += 1
             continue
 
-        emprunt_id     = row[0] 
+        emprunt_id     = row[0]
         noms_materiels = row[1]
         nom_emprunteur = row[2]
-        date_operation = row[3]  
-        retour_prevu   = row[4]
-        notes          = row[5]
-        statut         = row[6] if len(row) > 6 else "APPROUVE"
+        date_op_brut   = row[3]
+        retour_brut    = row[4]
+        notes          = row[5] if len(row) > 5 else ""
+        statut_brut    = row[6].upper().strip() if len(row) > 6 and row[6] else ""
 
-        if not noms_materiels or not nom_emprunteur:
-            erreurs.append(f"Ligne {i} : matériel ou emprunteur vide")
+        if not noms_materiels:
+            erreurs.append(f"Ligne {i} : colonne 'materiels' vide.")
+            ignores += 1
+            continue
+        if not nom_emprunteur:
+            erreurs.append(f"Ligne {i} : colonne 'emprunteur' vide.")
+            ignores += 1
+            continue
+        if not retour_brut:
+            erreurs.append(f"Ligne {i} : date de retour prévue manquante.")
             ignores += 1
             continue
 
-        if not retour_prevu:
-            erreurs.append(f"Ligne {i} : date de retour manquante")
-            ignores += 1
-            continue
-
-        retour_prevu_date = None
-        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y", "%Y-%m-%d %H:%M:%S"):
-            try:
-                retour_prevu_date = datetime.strptime(retour_prevu, fmt).date()
-                break
-            except ValueError:
-                continue
+        date_operation = _parse_date(date_op_brut) if date_op_brut else today
+        retour_prevu_date = _parse_date(retour_brut)
 
         if retour_prevu_date is None:
-            erreurs.append(f"Ligne {i} : format date invalide '{retour_prevu}'")
+            erreurs.append(f"Ligne {i} : format de date invalide '{retour_brut}'.")
             ignores += 1
             continue
 
-        statut = statut.upper().strip()
-        if statut not in valeurs_valides:
-            statut ="APPROUVE"
-
-        parties = nom_emprunteur.strip().split()
-        emprunteur_obj = None
-
-        if len(parties) >= 2:
-            emprunteur_obj = Tierce.objects.filter(
-                prenom__iexact=parties[0],
-                nom__iexact=" ".join(parties[1:])
-            ).first()
-            if not emprunteur_obj:
-                emprunteur_obj = Tierce.objects.filter(
-                    nom__iexact=parties[0],
-                    prenom__iexact=" ".join(parties[1:])
-                ).first()
-
-        if not emprunteur_obj:
-            emprunteur_obj = Tierce.objects.filter(nom__iexact=nom_emprunteur).first()
-        if not emprunteur_obj:
-            emprunteur_obj = Tierce.objects.filter(prenom__iexact=nom_emprunteur).first()
-
-        if not emprunteur_obj:
-            erreurs.append(f"Ligne {i} : emprunteur '{nom_emprunteur}' introuvable en base")
+        if date_operation and retour_prevu_date < date_operation:
+            erreurs.append(f"Ligne {i} : la date de retour ({retour_prevu_date}) est antérieure à la date d'emprunt ({date_operation}).")
             ignores += 1
             continue
 
-        noms_liste = [n.strip() for n in noms_materiels.split(",")]
-        materiels_objs = []
-        ligne_ok = True
+        statut = statut_brut if statut_brut in statuts_valides else Emprunt.Statut.APPROUVE
 
-        for nom in noms_liste:
-            try:
-                m = Materiel.objects.get(nom__iexact=nom)
-                materiels_objs.append(m)
-                continue
-            except Materiel.DoesNotExist:
-                pass
-            except Materiel.MultipleObjectsReturned:
-                erreurs.append(f"Ligne {i} : plusieurs matériels trouvés pour '{nom}'")
-                ligne_ok = False
-                break
-
-            try:
-                m = Materiel.objects.get(id_materiel__iexact=nom)
-                materiels_objs.append(m)
-                continue
-            except Materiel.DoesNotExist:
-                erreurs.append(f"Ligne {i} : matériel '{nom}' introuvable en base")
-                ligne_ok = False
-                break
-
-        if not ligne_ok or not materiels_objs:
+        emprunteur_obj = _resoudre_emprunteur(nom_emprunteur)
+        if not emprunteur_obj:
+            erreurs.append(f"Ligne {i} : emprunteur '{nom_emprunteur}' introuvable en base.")
             ignores += 1
             continue
+
+        materiels_objs, errs_materiels = _resoudre_materiels(noms_materiels, i)
+        if errs_materiels:
+            erreurs.extend(errs_materiels)
+            ignores += 1
+            continue
+        if not materiels_objs:
+            erreurs.append(f"Ligne {i} : aucun matériel valide trouvé.")
+            ignores += 1
+            continue
+
+        emprunt_id_int = int(emprunt_id) if emprunt_id.isdigit() else None
+        emprunt_existant = Emprunt.objects.filter(id=emprunt_id_int).first() if emprunt_id_int else None
 
         try:
-            emprunt_id_int = int(emprunt_id) if emprunt_id.isdigit() else None
+            if emprunt_existant:
+                # ── MISE À JOUR ──────────────────────────────────────────────
+                # On ne retouche PAS l'état des matériels : ils sont déjà
+                # dans le bon état en base, l'import ne doit pas les perturber.
+                ancien_statut = emprunt_existant.statut
 
-            if emprunt_id_int:
-                emprunt, created = Emprunt.objects.update_or_create(
-                    id=emprunt_id_int,
-                    defaults={
-                        "materiel": materiels_objs[0],
-                        "emprunteur": emprunteur_obj,
-                        "date_retour_prevue": retour_prevu_date,
-                        "statut": statut,
-                        "notes": notes,
-                    }
-                )
-            else:
-                emprunt = Emprunt.objects.create(
-                    materiel=materiels_objs[0],
-                    emprunteur=emprunteur_obj,
-                    date_retour_prevue=retour_prevu_date,
-                    statut=statut,
-                    notes=notes,
-                )
-                created = True
+                emprunt_existant.emprunteur = emprunteur_obj
+                emprunt_existant.date_retour_prevue = retour_prevu_date
+                emprunt_existant.notes = notes
+                emprunt_existant.statut = statut
 
-            emprunt.lignes.all().delete()  
-            for m in materiels_objs:
-                LigneEmprunt.objects.create(emprunt=emprunt, materiel=m)
+                # Règle : RETOURNE sans date réelle → on met aujourd'hui
+                if statut == Emprunt.Statut.RETOURNE and not emprunt_existant.date_retour_reelle:
+                    emprunt_existant.date_retour_reelle = today
 
-            if created:
-                importes += 1
-            else:
+                emprunt_existant.save()
+
+                # Sync des lignes sans toucher à l'état des matériels
+                ids_existants = set(emprunt_existant.lignes.values_list("materiel_id", flat=True))
+                ids_nouveaux = {m.id_materiel for m in materiels_objs}
+
+                # Supprimer uniquement les lignes qui disparaissent
+                emprunt_existant.lignes.exclude(materiel_id__in=ids_nouveaux).delete()
+
+                # Ajouter uniquement les nouvelles lignes
+                for m in materiels_objs:
+                    if m.id_materiel not in ids_existants:
+                        LigneEmprunt.objects.create(emprunt=emprunt_existant, materiel=m)
+
+                # Si le statut passe à RETOURNE, libérer les matériels EN PRET
+                if statut == Emprunt.Statut.RETOURNE and ancien_statut != Emprunt.Statut.RETOURNE:
+                    for m in materiels_objs:
+                        if m.est_en_pret():
+                            m.retourner()
+
                 mis_a_jour += 1
 
+            else:
+                # ── CRÉATION ────────────────────────────────────────────────
+                # Nouvel emprunt APPROUVE : tous les matériels doivent être disponibles
+                if statut == Emprunt.Statut.APPROUVE:
+                    indisponibles = [m for m in materiels_objs if not m.est_disponible()]
+                    if indisponibles:
+                        noms_ind = ", ".join(m.nom for m in indisponibles)
+                        erreurs.append(f"Ligne {i} : matériel(s) non disponible(s) : {noms_ind}. Emprunt ignoré.")
+                        ignores += 1
+                        continue
+
+                date_retour_reelle = today if statut == Emprunt.Statut.RETOURNE else None
+                emprunt = Emprunt.objects.create(
+                    materiels=materiels_objs[0],
+                    emprunteur=emprunteur_obj,
+                    date_retour_prevue=retour_prevu_date,
+                    date_retour_reelle=date_retour_reelle,
+                    statut=statut,
+                    notes=notes,
+                    type_operation=Operation.TypeOperation.EMPRUNT,
+                )
+
+                for m in materiels_objs:
+                    LigneEmprunt.objects.create(emprunt=emprunt, materiel=m)
+
+                # Mise à jour de l'état des matériels uniquement à la création
+                if statut == Emprunt.Statut.APPROUVE:
+                    for m in materiels_objs:
+                        if m.est_disponible():
+                            m.mettre_en_pret()
+                elif statut == Emprunt.Statut.RETOURNE:
+                    for m in materiels_objs:
+                        if m.est_en_pret():
+                            m.retourner()
+
+                importes += 1
+
         except Exception as e:
-            erreurs.append(f"Ligne {i} : erreur : {e}")
+            erreurs.append(f"Ligne {i} : erreur inattendue : {e}")
             ignores += 1
             continue
 
@@ -647,8 +701,11 @@ def import_emprunts(request):
 
     for erreur in erreurs[:10]:
         messages.warning(request, erreur)
+    if len(erreurs) > 10:
+        messages.warning(request, f"… et {len(erreurs) - 10} autre(s) erreur(s) non affichée(s).")
 
-    return redirect(f"{reverse('equipement:dashboard')}?tab=lister_emprunts")
+    return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
+
 def exporter_template_emprunts(request):
     wb = openpyxl.Workbook()
     ws = wb.active
@@ -675,7 +732,7 @@ def exporter_template_emprunts(request):
             emprunt.id,
             noms_materiels,
             f"{emprunt.emprunteur.prenom} {emprunt.emprunteur.nom}",
-            emprunt.date_emprunt.strftime("%Y-%m-%d %H:%M:%S") if emprunt.date_emprunt else "",
+            emprunt.date_operation.strftime("%Y-%m-%d %H:%M:%S") if emprunt.date_operation else "",
             emprunt.date_retour_prevue.strftime("%Y-%m-%d") if emprunt.date_retour_prevue else "",
             emprunt.notes or "",
             emprunt.statut or "",
