@@ -19,6 +19,7 @@
     </script>
   </head>
   <body class="min-h-screen bg-slate-100 text-slate-800">
+
     <div class="mx-auto grid min-h-screen w-full max-w-6xl items-center px-4 py-8 lg:grid-cols-2 lg:gap-12">
 
       {# ── Panneau gauche (bleu marine) ── #}
@@ -80,20 +81,19 @@
             </div>
             <p class="text-xs font-bold uppercase tracking-widest text-slate-500">Gestion Utilisateurs</p>
           </div>
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
           <h2 class="text-2xl font-bold text-navy-800">Connexion</h2>
-
-          {% if messages %}
-            <div class="mt-4 space-y-2" role="status" aria-live="polite">
-              {% for message in messages %}
-                <div class="flex items-center gap-2 rounded-lg border px-3 py-2.5 text-sm font-medium
-                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
-                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
-                  {% else %}border-slate-200 bg-slate-50 text-slate-700{% endif %}">
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
 
           <form method="post" class="mt-5 space-y-4" novalidate>
             {% csrf_token %}

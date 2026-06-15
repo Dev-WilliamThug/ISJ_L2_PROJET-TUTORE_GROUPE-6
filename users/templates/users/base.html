@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{% block title %}Gestion Utilisateurs{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
       tailwind.config = {
         theme: {
@@ -128,6 +129,12 @@
             </svg>
             Gestion des inventaires
           </a>
+          <a href="?tab=classes/liste" class="nav-link {% if tab == 'classes/liste' or tab == 'classes/creer' %}active{% endif %}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0 0 12 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75Z" />
+            </svg>
+            Salles de classe
+          </a>
         </nav>
         {# Déconnexion #}
         <div class="border-t border-white/10 px-3 py-4">
@@ -166,27 +173,10 @@
 
         {# Content area #}
         <main class="flex-1 p-6">
-          {% if messages %}
-            <div class="mb-5 space-y-2" role="status" aria-live="polite">
-              {% for message in messages %}
-                <div class="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-medium
-                  {% if 'success' in message.tags %}border-green-200 bg-green-50 text-green-800
-                  {% elif 'error' in message.tags or 'warning' in message.tags %}border-red-200 bg-red-50 text-red-800
-                  {% else %}border-slate-200 bg-white text-slate-700{% endif %}">
-                  {% if 'success' in message.tags %}
-                    <svg class="h-4 w-4 shrink-0 text-green-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 5 5L20 7"/></svg>
-                  {% elif 'error' in message.tags %}
-                    <svg class="h-4 w-4 shrink-0 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 8v4M12 16h.01"/></svg>
-                  {% endif %}
-                  {{ message }}
-                </div>
-              {% endfor %}
-            </div>
-          {% endif %}
-
           {% block content %}{% endblock %}
         </main>
       </div>
     </div>
+  {% block scripts %}{% endblock %}
   </body>
 </html>

@@ -4,154 +4,42 @@
 {% block page_title %}Inventaire #{{ inventaire.id }}{% endblock %}
 
 {% block content %}
-<section class="space-y-6">
-
-  {# ── Fiche récap ── #}
-  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Classe</p>
-      <p class="mt-1 text-xl font-bold text-navy-800">{{ inventaire.classe.nom }}</p>
-    </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Date d'inventaire</p>
-      <p class="mt-1 text-xl font-bold text-navy-800">{{ inventaire.date_inventaire|date:"d/m/Y" }}</p>
-    </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Créé par</p>
-      <p class="mt-1 text-xl font-bold text-navy-800">
-        {% if inventaire.created_by %}
-          {{ inventaire.created_by.prenom }} {{ inventaire.created_by.nom }}
-        {% else %}
-          <span class="text-slate-400">—</span>
-        {% endif %}
-      </p>
-    </div>
-    <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-soft">
-      <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Enregistré le</p>
-      <p class="mt-1 text-xl font-bold text-navy-800">{{ inventaire.created_at|date:"d/m/Y H:i" }}</p>
-    </div>
-  </div>
-
-  {# ── Tableau de synthèse ── #}
-  <div class="rounded-xl border border-slate-200 bg-white shadow-soft">
-    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-      <div>
-        <h2 class="text-base font-bold text-slate-800">Résultats par catégorie</h2>
-        <p class="mt-0.5 text-xs text-slate-400">Vue lecture seule.</p>
-      </div>
-      <div class="flex items-center gap-2">
-        <a href="{% url 'inventaire:inventaire_export' inventaire.id %}"
-           class="inline-flex items-center gap-1.5 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-semibold text-teal-700 transition hover:bg-teal-100 shadow-sm">
-          <svg class="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          Exporter Excel
-        </a>
-      </div>
-    </div>
-
-    {% if lignes %}
-      <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-slate-100">
-          <thead class="bg-slate-50">
-            <tr>
-              <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Catégorie</th>
-              <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Stock initial</th>
-              <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Emprunté (système)</th>
-              <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Stock réel constaté</th>
-              <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Différence</th>
-              <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Statut</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 bg-white">
-            {% for ligne in lignes %}
-              <tr class="hover:bg-slate-50 transition-colors">
-                <td class="px-5 py-4 text-sm font-semibold text-slate-800">
-                  {{ ligne.categorie.nom }}
-                </td>
-                <td class="px-5 py-4 text-center text-sm text-slate-700">
-                  {{ ligne.stock_initial }}
-                </td>
-                <td class="px-5 py-4 text-center">
-                  <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-bold text-blue-700">
-                    {{ ligne.stock_emprute }}
-                  </span>
-                </td>
-                <td class="px-5 py-4 text-center text-sm font-bold text-slate-800">
-                  {{ ligne.stock_reel }}
-                </td>
-                <td class="px-5 py-4 text-center">
-                  {% with diff=ligne.difference %}
-                    {% if diff == 0 %}
-                      <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">= 0</span>
-                    {% elif diff > 0 %}
-                      <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">+{{ diff }}</span>
-                    {% else %}
-                      <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">{{ diff }}</span>
-                    {% endif %}
-                  {% endwith %}
-                </td>
-                <td class="px-5 py-4 text-center">
-                  {% with diff=ligne.difference %}
-                    {% if diff == 0 %}
-                      <span class="rounded-full bg-green-100 px-2.5 py-1 text-xs font-bold text-green-700">✓ Conforme</span>
-                    {% elif diff > 0 %}
-                      <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">⚠ Excédent</span>
-                    {% else %}
-                      <span class="rounded-full bg-red-100 px-2.5 py-1 text-xs font-bold text-red-700">✗ Manquant</span>
-                    {% endif %}
-                  {% endwith %}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-
-      {# ── Résumé global ── #}
-      <div class="border-t border-slate-100 px-6 py-4">
-        <div class="flex flex-wrap gap-4 text-xs font-semibold">
-          <span class="flex items-center gap-1.5 text-green-700">
-            <span class="inline-block h-2.5 w-2.5 rounded-full bg-green-400"></span>
-            Conforme : {{ lignes|length }} – 0 écarts
-          </span>
-          <span class="text-slate-400">|</span>
-          <span class="text-slate-500">Lecture seule – pour modifier, recréez un inventaire à la même date.</span>
-        </div>
-      </div>
-    {% else %}
-      <div class="px-6 py-10 text-center">
-        <p class="text-sm font-medium text-slate-400">Aucune ligne d'inventaire enregistrée.</p>
-      </div>
-    {% endif %}
-  </div>
-
-  {# ── Actions bas de page ── #}
-  <div class="flex items-center gap-3">
-    <a href="{% url 'inventaire:inventaire_list' %}"
-       class="inline-flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 shadow-sm">
-      <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5M12 19l-7-7 7-7"/>
-      </svg>
-      Retour à la liste
-    </a>
-
-    <form method="post" action="{% url 'inventaire:inventaire_delete' inventaire.id %}"
-          onsubmit="return confirm('Supprimer définitivement cet inventaire ?')">
-      {% csrf_token %}
-      <button type="submit"
-              class="inline-flex items-center gap-2 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-600 transition hover:bg-red-100 shadow-sm">
-        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="3 6 5 6 21 6"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-          <path stroke-linecap="round" stroke-linejoin="round" d="M10 11v6M14 11v6M9 6V4h6v2"/>
-        </svg>
-        Supprimer
-      </button>
-    </form>
-  </div>
-
-</section>
+{%if emprunts_classe%}
+  {# CODE POUR AFFICHER LES EMPRUNTS LIEE A LA CLASSE AVEC TAILWIND INTEGRE#}
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white border border-gray-200">
+      <thead>
+        <tr>
+          <th class="py-2 px-4 border-b">Élève</th>
+          <th class="py-2 px-4 border-b">Équipement</th>
+          <th class="py-2 px-4 border-b">Date d'emprunt</th>
+          <th class="py-2 px-4 border-b">Date de retour</th>
+          <th class="py-2 px-4 border-b">Statut</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for emprunt in emprunts_classe %}
+        <tr>
+          <td class="py-2 px-4 border-b">{{ emprunt.eleve.nom }}</td>
+          <td class="py-2 px-4 border-b">{{ emprunt.equipement.nom }}</td>
+          <td class="py-2 px-4 border-b">{{ emprunt.date_operation|date:"Y-m-d H:i" }}</td>
+          <td class="py-2 px-4 border-b">
+            {% if emprunt.date_retour %}
+              {{ emprunt.date_retour|date:"Y-m-d H:i" }}
+            {% else %}
+              Non retourné
+            {% endif %}
+          </td>
+          <td class="py-2 px-4 border-b">
+            {% if emprunt.date_retour %}
+              Retourné
+            {% else %}
+              En cours
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+{% endif %}
 {% endblock %}
