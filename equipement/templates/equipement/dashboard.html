@@ -6,6 +6,18 @@
 
 {% block content %}
   {% if tab == 'dashboard' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="space-y-6">
       <div class="grid gap-4 sm:grid-cols-4">
         <article class="rounded-xl bg-greenBrand-600 p-5 text-white shadow-soft">
@@ -51,6 +63,18 @@
   {% endif %}
 
   {% if tab == 'equipement/ajouter' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un equipement</h2>
       <form class="grid gap-4 sm:grid-cols-2" method="post">
@@ -72,6 +96,7 @@
   {% endif %}
 
   {% if tab == 'equipement/liste' %}
+
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
             {% if messages %}
               <div class="mb-4 space-y-2">
@@ -189,6 +214,18 @@
   {% endif %}
 
   {% if tab == 'detail' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Details de l'equipement</h2>
       {% if materiel_detail %}
@@ -207,6 +244,18 @@
   {% endif %}
 
   {% if tab == 'emprunteur/ajouter' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="mb-4 text-lg font-bold text-slate-800">Ajouter un emprunteur</h2>
       <form class="grid gap-4 sm:grid-cols-2" method="post">
@@ -229,6 +278,18 @@
   {% endif %}
 
   {% if tab == 'emprunteur/liste' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des emprunteurs</h2>
@@ -277,6 +338,18 @@
   {% endif %}
 
   {% if tab == 'detail_emprunteur' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Details de l'emprunteur</h2>
       {% if emprunteur_detail %}
@@ -294,6 +367,18 @@
   {% endif %}
 
   {% if tab == 'emprunts/creer' %}
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="mb-4 text-lg font-bold text-slate-800">Créer un emprunt</h2>
       <form class="space-y-5" method="post" action="{% url 'equipement:enregistrer_emprunt' %}">
@@ -372,7 +457,6 @@
   {% endif %}
 
   {% if tab == 'emprunts/liste' %}
-    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
           {% if messages %}
               <div class="mb-4 space-y-2">
                 {% for message in messages %}
@@ -385,10 +469,11 @@
                 {% endfor %}
               </div>
             {% endif %}
-      <div class="flex gap-2">
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
+      <div class="flex items-center justify-flex-start gap-2 border-b border-slate-100 px-6 py-4">
         <a href="?tab=emprunts/creer" class="btn-primary">Ajouter</a>
         <a href="{% url 'equipement:exporter_template_emprunts' %}" class="btn-secondary">Exporter</a>
-        <a href="?tab=import" class="btn-secondary">Importer</a>  {# ← ajouter #}
+        <a href="?tab=import" class="btn-secondary">Importer</a>  
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
@@ -440,6 +525,18 @@
   {% endif %}
 
   {% if tab == 'rapports' %}
+          {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
@@ -534,6 +631,18 @@
   {% endif %}
 
   {% if tab == 'import' %}
+          {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
   <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
       <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>

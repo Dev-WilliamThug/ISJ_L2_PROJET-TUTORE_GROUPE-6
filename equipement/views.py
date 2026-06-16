@@ -509,7 +509,7 @@ def import_emprunts(request):
     ignores = 0
     erreurs = []
 
-    statuts_valides = [c[0] for c in Emprunt.Statut.choices]
+    statuts_valides = [c[0] for c in Emprunt.Statut.choices] 
     today = timezone.localdate()
 
     def _parse_date(valeur: str):
