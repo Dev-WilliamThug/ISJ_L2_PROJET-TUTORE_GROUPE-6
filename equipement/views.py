@@ -20,10 +20,6 @@ from .rules import materiel_a_un_emprunt_en_cours
 from .reminder_service import ReminderService
 
 
-# ------------------------------------------------------------------ #
-#  Décorateurs                                                        #
-# ------------------------------------------------------------------ #
-
 def manager_required(view_func):
     @wraps(view_func)
     def _wrapped(request: HttpRequest, *args, **kwargs):
@@ -34,10 +30,6 @@ def manager_required(view_func):
         return view_func(request, *args, **kwargs)
     return _wrapped
 
-
-# ------------------------------------------------------------------ #
-#  Auth                                                               #
-# ------------------------------------------------------------------ #
 
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
@@ -58,10 +50,10 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 messages.error(request, "Identifiants incorrects.")
             else:
                 login(request, user)
-            if request.user.type_user == CustomUser.TypeUser.ADMIN:
-                return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
-            elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
+                if user.type_user == CustomUser.TypeUser.ADMIN:
+                    return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
+                elif user.type_user == CustomUser.TypeUser.MANAGER:
+                    return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
     return render(request, "equipement/login.html", {"form": form})
 
 
@@ -70,10 +62,6 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     messages.success(request, "Déconnexion effectuée.")
     return redirect("equipement:login")
 
-
-# ------------------------------------------------------------------ #
-#  Matériels                                                          #
-# ------------------------------------------------------------------ #
 
 def register_materiel(request: HttpRequest, form: MaterielForm) -> HttpResponse:
     if request.method != "POST":
@@ -95,16 +83,11 @@ def edit_equipement(request: HttpRequest, materiel_id: str) -> HttpResponse:
         if form.is_valid():
             form.save()
             messages.success(request, f"Equipement {materiel.nom} modifié avec succès.")
-            return redirect(
-                f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}"
-            )
+            return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
         messages.error(request, "Veuillez corriger les erreurs du formulaire.")
     else:
         form = EditMaterielForm(instance=materiel)
-    return render(request, "equipement/edit_equipement.html", {
-        "form": form,
-        "materiel": materiel,
-    })
+    return render(request, "equipement/edit_equipement.html", {"form": form, "materiel": materiel})
 
 
 def retirer_materiel(request, materiel_id):
@@ -122,10 +105,6 @@ def detail_materiel(request, materiel_id):
     get_object_or_404(Materiel, id_materiel=materiel_id)
     return redirect(f"{reverse('equipement:dashboard')}?tab=detail&materiel_id={materiel_id}")
 
-
-# ------------------------------------------------------------------ #
-#  Emprunteurs                                                        #
-# ------------------------------------------------------------------ #
 
 def register_emprunteur(request: HttpRequest, form: EnregistrerEmprunteurForm) -> HttpResponse:
     if request.method != "POST":
@@ -147,16 +126,11 @@ def edit_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse:
         if form.is_valid():
             form.save()
             messages.success(request, f"Emprunteur {emprunteur.prenom} {emprunteur.nom} modifié avec succès.")
-            return redirect(
-                f"{reverse('equipement:dashboard')}?tab=detail_emprunteur&emprunteur_id={emprunteur_id}"
-            )
+            return redirect(f"{reverse('equipement:dashboard')}?tab=detail_emprunteur&emprunteur_id={emprunteur_id}")
         messages.error(request, "Veuillez corriger les erreurs du formulaire.")
     else:
         form = EditEmprunteurForm(instance=emprunteur)
-    return render(request, "equipement/edit_emprunteur.html", {
-        "form": form,
-        "emprunteur": emprunteur,
-    })
+    return render(request, "equipement/edit_emprunteur.html", {"form": form, "emprunteur": emprunteur})
 
 
 def detail_emprunteur(request, emprunteur_id):
@@ -175,12 +149,7 @@ def retirer_emprunteur(request: HttpRequest, emprunteur_id: str) -> HttpResponse
     return redirect(f"{reverse('equipement:dashboard')}?tab=emprunteur/liste")
 
 
-# ------------------------------------------------------------------ #
-#  Dashboard principal                                                #
-# ------------------------------------------------------------------ #
-
 def dashboard(request: HttpRequest) -> HttpResponse:
-    # Email auto au premier retard détecté
     if request.user.is_authenticated:
         ReminderService.check_and_notify_new_overdue()
 
@@ -201,7 +170,6 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     materiels_total = Materiel.objects.all()
     emprunts = (
         Emprunt.objects
-        .filter(Q(statut=Emprunt.Statut.APPROUVE) | Q(statut=Emprunt.Statut.REFUSE))
         .select_related("materiels", "emprunteur")
         .prefetch_related("lignes__materiel")
         .order_by("-date_operation")
@@ -229,6 +197,29 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         .order_by("-date_operation")
     )
     equipements_non_rendus_count = sum(emprunt.lignes.count() or 1 for emprunt in emprunts_non_rendus)
+
+    # Emprunts en retard pour le tab
+    overdue = ReminderService.get_overdue_emprunts()
+    emprunts_retard = []
+    for emprunt in overdue:
+        days_overdue = ReminderService.get_days_overdue(emprunt)
+        emprunts_retard.append({
+            "emprunt": emprunt,
+            "days_overdue": days_overdue,
+            "emprunteur": emprunt.emprunteur,
+            "materiels": [ligne.materiel for ligne in emprunt.lignes.all()],
+        })
+    emprunts_retard.sort(key=lambda x: x["days_overdue"], reverse=True)
+
+    # Rappels pour le tab
+    type_filter   = request.GET.get("type", "")
+    statut_filter = request.GET.get("statut", "")
+    rappels = Rappel.objects.select_related("emprunt__emprunteur").order_by("-date_envoi")
+    if type_filter:
+        rappels = rappels.filter(type_rappel=type_filter)
+    if statut_filter:
+        rappels = rappels.filter(statut_envoi=statut_filter)
+    types = Rappel.TypeRappel.choices
 
     if request.method == "POST":
         if action == "register_materiel":
@@ -269,13 +260,15 @@ def dashboard(request: HttpRequest) -> HttpResponse:
         "categories": categories,
         "categorie_filtre": categorie_filtre,
         "today_date": timezone.localdate(),
+        "emprunts_retard": emprunts_retard,
+        "total": len(emprunts_retard),
+        "rappels": rappels,
+        "types": types,
+        "type_filter": type_filter,
+        "statut_filter": statut_filter,
     }
     return render(request, "equipement/dashboard.html", context)
 
-
-# ------------------------------------------------------------------ #
-#  Rapport PDF                                                        #
-# ------------------------------------------------------------------ #
 
 @login_required
 def rapport_pdf(request: HttpRequest) -> HttpResponse:
@@ -303,7 +296,6 @@ def rapport_pdf(request: HttpRequest) -> HttpResponse:
             )
     else:
         lines.append("Aucun equipement hors service.")
-
     lines.extend(["", "## Equipements non rendus"])
     if emprunts_non_rendus.exists():
         for emprunt in emprunts_non_rendus:
@@ -328,16 +320,11 @@ def rapport_pdf(request: HttpRequest) -> HttpResponse:
                 )
     else:
         lines.append("Aucun equipement non rendu.")
-
     pdf = build_simple_pdf("Rapport des equipements", lines)
     response = HttpResponse(pdf, content_type="application/pdf")
     response["Content-Disposition"] = 'attachment; filename="rapport_equipements.pdf"'
     return response
 
-
-# ------------------------------------------------------------------ #
-#  Emprunts                                                           #
-# ------------------------------------------------------------------ #
 
 @login_required
 def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
@@ -347,19 +334,15 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
             materiels_choisis = form.cleaned_data["materiels"]
             date_operation    = form.cleaned_data["date_operation"]
             now = timezone.now()
-
             if timezone.is_naive(date_operation):
                 date_operation = timezone.make_aware(date_operation)
-
             statut = Emprunt.Statut.APPROUVE if date_operation <= now else Emprunt.Statut.EN_ATTENTE
-
             if statut == Emprunt.Statut.APPROUVE:
                 indisponibles = [m for m in materiels_choisis if not m.est_disponible()]
                 if indisponibles:
                     noms = ", ".join(m.nom for m in indisponibles)
                     messages.error(request, f"Matériel(s) non disponible(s) : {noms}")
                     return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
-
             emprunt = Emprunt.objects.create(
                 materiels=materiels_choisis[0],
                 date_operation=date_operation,
@@ -370,19 +353,16 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
                 date_retour_prevue=form.cleaned_data["date_retour_prevue"],
                 statut=statut,
             )
-
             for materiel in materiels_choisis:
                 LigneEmprunt.objects.create(emprunt=emprunt, materiel=materiel)
                 if statut == Emprunt.Statut.APPROUVE:
                     materiel.mettre_en_pret()
-
             messages.success(
                 request,
                 f"Emprunt enregistré avec succès ({len(materiels_choisis)} équipement(s), "
                 f"statut : {emprunt.get_statut_display()}).",
             )
             return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/liste")
-
         erreurs = []
         for field_errors in form.errors.values():
             erreurs.extend(field_errors)
@@ -390,10 +370,6 @@ def enregistrer_emprunt_view(request: HttpRequest) -> HttpResponse:
         return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
     return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/creer")
 
-
-# ------------------------------------------------------------------ #
-#  Import / Export                                                    #
-# ------------------------------------------------------------------ #
 
 def exporter_excel(request):
     wb = openpyxl.Workbook()
@@ -403,9 +379,7 @@ def exporter_excel(request):
     for m in Materiel.objects.all():
         ws.append([str(m.id_materiel), m.nom or "", m.couleur or "",
                    m.categorie or "", m.etat or "", m.marque or "", m.numero_serie or ""])
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     response['Content-Disposition'] = 'attachment; filename=materiels.xlsx'
     wb.save(response)
     return response
@@ -427,10 +401,8 @@ def import_materiels(request):
     except Exception as e:
         messages.error(request, f"Erreur lecture fichier : {e}")
         return redirect(f"{reverse('equipement:dashboard')}?tab=import")
-
     importes = ignores = etats_bloques = 0
     valeurs_valides = [c[0] for c in Materiel.ETAT_CHOICES]
-
     for row in ws.iter_rows(min_row=2, values_only=True):
         if not row:
             ignores += 1
@@ -454,7 +426,6 @@ def import_materiels(request):
             etats_bloques += 1
         Materiel.objects.update_or_create(id_materiel=id_materiel, defaults=defaults)
         importes += 1
-
     messages.success(request, f"Import terminé : {importes} lignes traitées, {ignores} ignorées.")
     return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
 
@@ -476,7 +447,6 @@ def import_emprunts(request):
     except Exception as e:
         messages.error(request, f"Erreur lecture fichier : {e}")
         return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
-
     importes = mis_a_jour = ignores = 0
     erreurs = []
     statuts_valides = [c[0] for c in Emprunt.Statut.choices]
@@ -511,7 +481,7 @@ def import_emprunts(request):
                 except Materiel.DoesNotExist:
                     errs.append(f"Ligne {numero_ligne} : matériel '{token}' introuvable.")
             except Materiel.MultipleObjectsReturned:
-                errs.append(f"Ligne {numero_ligne} : plusieurs matériels pour '{token}', utilisez l'id_materiel.")
+                errs.append(f"Ligne {numero_ligne} : plusieurs matériels pour '{token}'.")
         return objs, errs
 
     for i, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
@@ -519,10 +489,9 @@ def import_emprunts(request):
             continue
         row = [str(cell).strip() if cell is not None else "" for cell in row]
         if len(row) < 5:
-            erreurs.append(f"Ligne {i} : pas assez de colonnes ({len(row)}, minimum 5 attendues).")
+            erreurs.append(f"Ligne {i} : pas assez de colonnes.")
             ignores += 1
             continue
-
         emprunt_id     = row[0]
         noms_materiels = row[1]
         nom_emprunteur = row[2]
@@ -530,7 +499,6 @@ def import_emprunts(request):
         retour_brut    = row[4]
         notes          = row[5] if len(row) > 5 else ""
         statut_brut    = row[6].upper().strip() if len(row) > 6 and row[6] else ""
-
         if not noms_materiels:
             erreurs.append(f"Ligne {i} : colonne 'materiels' vide.")
             ignores += 1
@@ -543,7 +511,6 @@ def import_emprunts(request):
             erreurs.append(f"Ligne {i} : date de retour prévue manquante.")
             ignores += 1
             continue
-
         date_operation    = _parse_date(date_op_brut) if date_op_brut else today
         retour_prevu_date = _parse_date(retour_brut)
         if retour_prevu_date is None:
@@ -554,14 +521,12 @@ def import_emprunts(request):
             erreurs.append(f"Ligne {i} : date de retour antérieure à la date d'emprunt.")
             ignores += 1
             continue
-
         statut         = statut_brut if statut_brut in statuts_valides else Emprunt.Statut.APPROUVE
         emprunteur_obj = _resoudre_emprunteur(nom_emprunteur)
         if not emprunteur_obj:
             erreurs.append(f"Ligne {i} : emprunteur '{nom_emprunteur}' introuvable.")
             ignores += 1
             continue
-
         materiels_objs, errs_materiels = _resoudre_materiels(noms_materiels, i)
         if errs_materiels:
             erreurs.extend(errs_materiels)
@@ -571,17 +536,15 @@ def import_emprunts(request):
             erreurs.append(f"Ligne {i} : aucun matériel valide trouvé.")
             ignores += 1
             continue
-
         emprunt_id_int   = int(emprunt_id) if emprunt_id.isdigit() else None
         emprunt_existant = Emprunt.objects.filter(id=emprunt_id_int).first() if emprunt_id_int else None
-
         try:
             if emprunt_existant:
                 ancien_statut = emprunt_existant.statut
-                emprunt_existant.emprunteur       = emprunteur_obj
+                emprunt_existant.emprunteur        = emprunteur_obj
                 emprunt_existant.date_retour_prevue = retour_prevu_date
-                emprunt_existant.notes            = notes
-                emprunt_existant.statut           = statut
+                emprunt_existant.notes             = notes
+                emprunt_existant.statut            = statut
                 if statut == Emprunt.Statut.RETOURNE and not emprunt_existant.date_retour_reelle:
                     emprunt_existant.date_retour_reelle = today
                 emprunt_existant.save()
@@ -628,10 +591,8 @@ def import_emprunts(request):
         except Exception as e:
             erreurs.append(f"Ligne {i} : erreur inattendue : {e}")
             ignores += 1
-
     if importes > 0 or mis_a_jour > 0:
-        messages.success(request,
-            f"Import terminé : {importes} créé(s), {mis_a_jour} mis à jour, {ignores} ignoré(s).")
+        messages.success(request, f"Import terminé : {importes} créé(s), {mis_a_jour} mis à jour, {ignores} ignoré(s).")
     else:
         messages.error(request, f"Aucun emprunt importé. {ignores} ligne(s) ignorée(s).")
     for erreur in erreurs[:10]:
@@ -680,10 +641,6 @@ def exporter_template_emprunts(request):
     return response
 
 
-# ------------------------------------------------------------------ #
-#  Emprunts en retard                                                 #
-# ------------------------------------------------------------------ #
-
 @manager_required
 def overdue_emprunts(request: HttpRequest) -> HttpResponse:
     ReminderService.check_and_notify_new_overdue()
@@ -708,24 +665,16 @@ def marquer_rendu(request: HttpRequest, emprunt_id: int) -> HttpResponse:
     emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
     if emprunt.statut == Emprunt.Statut.RETOURNE:
         messages.warning(request, "Cet emprunt est déjà marqué comme rendu.")
-        return redirect("equipement:overdue_emprunts")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/retard")
     for ligne in emprunt.lignes.select_related("materiel").all():
         ligne.materiel.retourner()
-    emprunt.statut            = Emprunt.Statut.RETOURNE
+    emprunt.statut             = Emprunt.Statut.RETOURNE
     emprunt.date_retour_reelle = timezone.now().date()
     emprunt.save(update_fields=["statut", "date_retour_reelle", "updated_at"])
     ReminderService.send_return_confirmation(emprunt)
-    messages.success(
-        request,
-        f"Emprunt #{emprunt.id} marqué comme rendu. "
-        f"Email de confirmation envoyé à {emprunt.emprunteur.email}.",
-    )
-    return redirect("equipement:overdue_emprunts")
+    messages.success(request, f"Emprunt #{emprunt.id} marqué comme rendu.")
+    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/retard")
 
-
-# ------------------------------------------------------------------ #
-#  API notifications                                                  #
-# ------------------------------------------------------------------ #
 
 @manager_required
 def notifications_api(request: HttpRequest) -> JsonResponse:
@@ -746,10 +695,6 @@ def notifications_api(request: HttpRequest) -> JsonResponse:
         })
     return JsonResponse({"count": overdue.count(), "notifications": notifications})
 
-
-# ------------------------------------------------------------------ #
-#  Rappels                                                            #
-# ------------------------------------------------------------------ #
 
 @manager_required
 def rappels_list(request: HttpRequest) -> HttpResponse:
@@ -789,4 +734,4 @@ def send_reminders_manual(request: HttpRequest) -> HttpResponse:
             messages.success(request, base_msg)
     except Exception as e:
         messages.error(request, f"Erreur lors de l'envoi des rappels : {e}")
-    return redirect(request.META.get("HTTP_REFERER", "equipement:overdue_emprunts"))
+    return redirect(f"{reverse('equipement:dashboard')}?tab=emprunts/retard")

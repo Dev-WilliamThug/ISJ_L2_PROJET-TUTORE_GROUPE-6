@@ -2,9 +2,10 @@
 
 {% block title %}Dashboard Gestionnaire - Equipement{% endblock %}
 {% block page_title %}Tableau de bord gestionnaire{% endblock %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
   {% if tab == 'dashboard' %}
     <section class="space-y-6">
       <div class="grid gap-4 sm:grid-cols-4">
@@ -46,7 +47,7 @@
             {% endfor %}
           </ul>
         {% endif %}
-      </div>
+      </section>
     </section>
   {% endif %}
 
@@ -73,18 +74,18 @@
 
   {% if tab == 'equipement/liste' %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
-            {% if messages %}
-              <div class="mb-4 space-y-2">
-                {% for message in messages %}
-                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
-                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
-                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
-                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
-                    {{ message }}
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm font-medium
+              {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+              {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+              {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des equipements</h2>
         <div class="flex gap-2">
@@ -92,7 +93,6 @@
           <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
         </div>
       </div>
-      
       <div class="border-b border-slate-100 px-6 py-3 flex flex-wrap gap-2 items-center">
         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrer :</span>
         <a href="?tab=equipement/liste" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
@@ -146,7 +146,6 @@
     </section>
   {% endif %}
 
- 
   {% if tab == 'par_categorie' %}
     <section class="space-y-6">
       <div class="flex items-center justify-between">
@@ -220,7 +219,6 @@
             {% for error in field.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
           </div>
         {% endfor %}
-
         <div class="sm:col-span-2">
           <button class="btn-primary" type="submit">Enregistrer l'emprunteur</button>
         </div>
@@ -259,7 +257,7 @@
                 <td class="px-5 py-3">
                   <div class="flex flex-wrap items-center gap-2">
                     <a href="{% url 'equipement:detail_emprunteur' emprunteur.id_Tierce %}" class="btn-secondary px-2 py-1.5 text-xs">Details</a>
-                    <a href="{% url 'equipement:edit_emprunteur' emprunteur.id_Tierce%}" class="btn-primary px-2 py-1.5 text-xs">Modifier</a>
+                    <a href="{% url 'equipement:edit_emprunteur' emprunteur.id_Tierce %}" class="btn-primary px-2 py-1.5 text-xs">Modifier</a>
                     <form method="post" action="{% url 'equipement:retirer_emprunteur' emprunteur.id_Tierce %}">
                       {% csrf_token %}
                       <button type="submit" onclick="return confirm('Confirmer la suppression de cet emprunteur ?');" class="inline-flex items-center rounded-lg bg-red-600 px-2 py-1.5 text-xs font-semibold text-white transition hover:bg-red-700">Supprimer</button>
@@ -268,7 +266,7 @@
                 </td>
               </tr>
             {% empty %}
-              <tr><td colspan="6" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunteur enregistre.</td></tr>
+              <tr><td colspan="7" class="px-5 py-6 text-center text-sm text-slate-500">Aucun emprunteur enregistre.</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -298,13 +296,11 @@
       <h2 class="mb-4 text-lg font-bold text-slate-800">Créer un emprunt</h2>
       <form class="space-y-5" method="post" action="{% url 'equipement:enregistrer_emprunt' %}">
         {% csrf_token %}
-
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Date d'emprunt</label>
           <input type="datetime-local" name="date_operation" value="{{ formEmprunt.date_operation.value|default:'' }}" min="{{ today_date|date:'Y-m-d' }}T00:00" required class="field w-full" />
           {% for error in formEmprunt.date_operation.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
-
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Emprunteur</label>
           <select name="emprunteur" required class="field w-full">
@@ -317,7 +313,6 @@
           </select>
           {% for error in formEmprunt.emprunteur.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
-
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">
             Équipements disponibles
@@ -335,60 +330,52 @@
           {% endif %}
           {% for error in formEmprunt.materiels.errors %}<p class="mt-1 text-xs text-red-600">{{ error }}</p>{% endfor %}
         </div>
-
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">Date de retour prévue</label>
           <input type="date" name="date_retour_prevue" min="{{ today_date|date:'Y-m-d' }}" required class="field w-full" />
         </div>
-
         <div>
           <label class="mb-1 block text-sm font-semibold text-slate-700">
             Notes <span class="font-normal text-slate-400">(optionnel)</span>
           </label>
           <textarea name="notes" rows="3" class="field w-full resize-none" placeholder="Observations, conditions particulières..."></textarea>
         </div>
-
         <div id="statut-preview" class="hidden rounded-lg border p-3 text-sm font-medium"></div>
-
         <div>
           <button class="btn-primary w-full sm:w-auto" type="submit">Enregistrer l'emprunt</button>
         </div>
       </form>
     </section>
-
     <script>
       (function () {
         const input = document.querySelector('input[name="date_operation"]');
-        const preview = document.getElementById('statut-preview');
-        if (!input.value) {
+        if (input && !input.value) {
           const now = new Date();
           now.setSeconds(0, 0);
           input.value = now.toISOString().slice(0, 16);
         }
-        input.addEventListener('change', updatePreview);
-        updatePreview();
       })();
     </script>
   {% endif %}
 
   {% if tab == 'emprunts/liste' %}
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
-          {% if messages %}
-              <div class="mb-4 space-y-2">
-                {% for message in messages %}
-                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
-                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
-                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
-                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
-                    {{ message }}
-                  </div>
-                {% endfor %}
-              </div>
-            {% endif %}
-      <div class="flex gap-2">
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm font-medium
+              {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+              {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+              {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <div class="flex gap-2 px-6 py-4 border-b border-slate-100">
         <a href="?tab=emprunts/creer" class="btn-primary">Ajouter</a>
         <a href="{% url 'equipement:exporter_template_emprunts' %}" class="btn-secondary">Exporter</a>
-        <a href="?tab=import" class="btn-secondary">Importer</a>  {# ← ajouter #}
+        <a href="?tab=import" class="btn-secondary">Importer</a>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
@@ -414,16 +401,16 @@
                       {% endfor %}
                     </div>
                   {% else %}
-                    {{ emprunt.materiel }}
+                    {{ emprunt.materiels }}
                   {% endif %}
                 </td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.emprunteur }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_operation }}</td>
                 <td class="px-5 py-3 text-sm text-slate-700">{{ emprunt.date_retour_prevue }}</td>
-                {%if emprunt.statut == "approuve" %}
+                {% if emprunt.statut == "approuve" %}
                   <td class="px-5 py-3 text-sm text-greenBrand-500 font-semibold">{{ emprunt.get_statut_display }}</td>
                 {% elif emprunt.statut == "en_attente" %}
-                  <td class="px-5 py-3 text-sm text-accent-orange font-semibold">{{ emprunt.get_statut_display }}</td>
+                  <td class="px-5 py-3 text-sm text-amber-500 font-semibold">{{ emprunt.get_statut_display }}</td>
                 {% elif emprunt.statut == "refuse" %}
                   <td class="px-5 py-3 text-sm text-red-600 font-semibold">{{ emprunt.get_statut_display }}</td>
                 {% else %}
@@ -439,6 +426,157 @@
     </section>
   {% endif %}
 
+  {% if tab == 'emprunts/retard' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft p-6">
+      <div class="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <p class="text-sm text-slate-500">
+          <span class="font-semibold text-slate-700">{{ total }}</span>
+          emprunt{{ total|pluralize }} en retard actuellement
+        </p>
+        <form method="POST" action="{% url 'equipement:send_reminders_manual' %}">
+          {% csrf_token %}
+          <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-amber-500 hover:bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white transition">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 0 0 2.22 0L21 8M5 19h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2z"/></svg>
+            Envoyer les rappels par email
+          </button>
+        </form>
+      </div>
+      {% if emprunts_retard %}
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-200 bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <th class="px-4 py-3">#</th>
+                <th class="px-4 py-3">Emprunteur</th>
+                <th class="px-4 py-3">Matériel(s)</th>
+                <th class="px-4 py-3">Date prévue</th>
+                <th class="px-4 py-3 text-center">Retard</th>
+                <th class="px-4 py-3">Email</th>
+                <th class="px-4 py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for item in emprunts_retard %}
+                <tr class="hover:bg-slate-50 transition">
+                  <td class="px-4 py-3 text-slate-400 text-xs">#{{ item.emprunt.id }}</td>
+                  <td class="px-4 py-3 font-semibold text-slate-800">{{ item.emprunteur.prenom }} {{ item.emprunteur.nom }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex flex-wrap gap-1">
+                      {% for materiel in item.materiels %}
+                        <span class="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">{{ materiel.nom }}</span>
+                      {% endfor %}
+                    </div>
+                  </td>
+                  <td class="px-4 py-3 text-slate-600">{{ item.emprunt.date_retour_prevue|date:"d/m/Y" }}</td>
+                  <td class="px-4 py-3 text-center">
+                    {% if item.days_overdue >= 7 %}
+                      <span class="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">{{ item.days_overdue }} jours</span>
+                    {% elif item.days_overdue >= 3 %}
+                      <span class="inline-block rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700">{{ item.days_overdue }} jours</span>
+                    {% else %}
+                      <span class="inline-block rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-bold text-yellow-700">{{ item.days_overdue }} jour{{ item.days_overdue|pluralize }}</span>
+                    {% endif %}
+                  </td>
+                  <td class="px-4 py-3 text-slate-500 text-xs">{{ item.emprunteur.email }}</td>
+                  <td class="px-4 py-3">
+                    <div class="flex items-center justify-center gap-2">
+                      <a href="{% url 'equipement:detail_emprunteur' item.emprunteur.id_Tierce %}" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 transition">Voir</a>
+                      <form method="POST" action="{% url 'equipement:marquer_rendu' item.emprunt.id %}" onsubmit="return confirm('Confirmer le retour ?')">
+                        {% csrf_token %}
+                        <button type="submit" class="inline-flex items-center gap-1 rounded-lg bg-emerald-500 hover:bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white transition">Rendu</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="flex flex-col items-center justify-center rounded-xl border border-green-200 bg-green-50 py-16 gap-3">
+          <svg class="h-12 w-12 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg>
+          <p class="text-base font-semibold text-green-700">Aucun emprunt en retard !</p>
+          <p class="text-sm text-green-600">Tous les emprunts sont dans les délais.</p>
+        </div>
+      {% endif %}
+    </section>
+  {% endif %}
+
+  {% if tab == 'rappels' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft p-6">
+      <h2 class="mb-6 text-lg font-bold text-slate-800">📧 Historique des Rappels</h2>
+      {% if messages %}
+        <div class="mb-4 space-y-2">
+          {% for message in messages %}
+            <div class="rounded-lg border px-4 py-3 text-sm font-medium {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700{% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700{% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+      <form method="GET" class="mb-6 flex flex-wrap gap-4 items-end">
+        <input type="hidden" name="tab" value="rappels">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Type de Rappel</label>
+          <select name="type" class="field w-48">
+            <option value="">-- Tous les types --</option>
+            {% for value, label in types %}
+              <option value="{{ value }}" {% if type_filter == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Statut</label>
+          <select name="statut" class="field w-40">
+            <option value="">-- Tous --</option>
+            <option value="envoye" {% if statut_filter == 'envoye' %}selected{% endif %}>✓ Envoyé</option>
+            <option value="echec" {% if statut_filter == 'echec' %}selected{% endif %}>✗ Échec</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary">Filtrer</button>
+        <a href="?tab=rappels" class="btn-secondary">Réinitialiser</a>
+      </form>
+      {% if rappels %}
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-100">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Emprunteur</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Email</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Type</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Date d'envoi</th>
+                <th class="px-5 py-3 text-center text-xs font-bold uppercase tracking-wider text-slate-500">Statut</th>
+                <th class="px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              {% for rappel in rappels %}
+                <tr class="hover:bg-slate-50">
+                  <td class="px-5 py-3 text-sm font-semibold text-slate-800">{{ rappel.emprunt.emprunteur.prenom }} {{ rappel.emprunt.emprunteur.nom }}</td>
+                  <td class="px-5 py-3 text-xs text-slate-500">{{ rappel.email_destinataire }}</td>
+                  <td class="px-5 py-3"><span class="inline-block rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700">{{ rappel.get_type_rappel_display }}</span></td>
+                  <td class="px-5 py-3 text-sm text-slate-600">{{ rappel.date_envoi|date:"d/m/Y H:i" }}</td>
+                  <td class="px-5 py-3 text-center">
+                    {% if rappel.statut_envoi == 'envoye' %}
+                      <span class="inline-block rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-bold text-green-700">✓ Envoyé</span>
+                    {% else %}
+                      <span class="inline-block rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700">✗ Échec</span>
+                    {% endif %}
+                  </td>
+                  <td class="px-5 py-3">
+                    <a href="{% url 'equipement:detail_emprunteur' rappel.emprunt.emprunteur.id_Tierce %}" class="btn-secondary px-2 py-1.5 text-xs">Voir</a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="rounded-lg border border-slate-200 bg-slate-50 px-5 py-8 text-center text-sm text-slate-500">Aucun rappel trouvé.</div>
+      {% endif %}
+    </section>
+  {% endif %}
+
   {% if tab == 'rapports' %}
     <section class="space-y-6">
       <div class="flex flex-wrap items-center justify-between gap-3">
@@ -448,7 +586,6 @@
         </div>
         <a href="{% url 'equipement:rapport_pdf' %}" class="btn-primary">Generer le PDF</a>
       </div>
-
       <div class="grid gap-4 sm:grid-cols-2">
         <article class="rounded-xl border border-red-100 bg-white p-5 shadow-soft">
           <p class="text-sm font-medium text-slate-500">Equipements hors service</p>
@@ -459,7 +596,6 @@
           <p class="mt-1 text-4xl font-bold text-amber-600">{{ equipements_non_rendus_count }}</p>
         </article>
       </div>
-
       <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
         <div class="border-b border-slate-100 px-6 py-4">
           <h3 class="font-bold text-slate-800">Equipements hors service</h3>
@@ -491,7 +627,6 @@
           </table>
         </div>
       </section>
-
       <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
         <div class="border-b border-slate-100 px-6 py-4">
           <h3 class="font-bold text-slate-800">Equipements non rendus</h3>
@@ -534,66 +669,35 @@
   {% endif %}
 
   {% if tab == 'import' %}
-  <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-    <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-      <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>
-      <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel, nom, couleur, categorie, etat, marque.</p>
-      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_materiels' %}">
-        {% csrf_token %}
-        <input class="field" type="file" name="file" accept=".xlsx" required />
-        <button type="submit" class="btn-primary">Importer maintenant</button>
-      </form>
-    </section>
-     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
-      <h2 class="text-lg font-bold text-slate-800">Importer facilements les emprunts (Excel)</h2>
-      <p class="mt-1 text-sm text-slate-500">
-        Colonnes attendues (dans l'ordre) :
-        <code class="text-xs bg-slate-100 px-1 rounded">id</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">materiels</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">emprunteur</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">date_operation</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">date_retour_prevue</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">notes</code>
-        <code class="text-xs bg-slate-100 px-1 rounded">statut</code>
-      </p>
-      <p class="mt-1 text-xs text-slate-400">
-        Formats de date acceptés : AAAA-MM-JJ ou JJ/MM/AAAA. 
-        Statuts valides : en_attente, approuve, refuse, retourne.
-        Plusieurs matériels séparés par des virgules.
-      </p>
-      <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_emprunts' %}">
-        {% csrf_token %}
-        <input class="field" type="file" name="file" accept=".xlsx" required />
-        <button type="submit" class="btn-primary">Importer</button>
-      </form>
-    </section>
-  </div>
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-bold text-slate-800">Importer des equipements (Excel)</h2>
+        <p class="mt-1 text-sm text-slate-500">Colonnes attendues : id_materiel, nom, couleur, categorie, etat, marque.</p>
+        <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_materiels' %}">
+          {% csrf_token %}
+          <input class="field" type="file" name="file" accept=".xlsx" required />
+          <button type="submit" class="btn-primary">Importer maintenant</button>
+        </form>
+      </section>
+      <section class="rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+        <h2 class="text-lg font-bold text-slate-800">Importer les emprunts (Excel)</h2>
+        <p class="mt-1 text-sm text-slate-500">
+          Colonnes attendues :
+          <code class="text-xs bg-slate-100 px-1 rounded">id</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">materiels</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">emprunteur</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">date_operation</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">date_retour_prevue</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">notes</code>
+          <code class="text-xs bg-slate-100 px-1 rounded">statut</code>
+        </p>
+        <form class="mt-5 space-y-4" method="post" enctype="multipart/form-data" action="{% url 'equipement:import_emprunts' %}">
+          {% csrf_token %}
+          <input class="field" type="file" name="file" accept=".xlsx" required />
+          <button type="submit" class="btn-primary">Importer</button>
+        </form>
+      </section>
+    </div>
   {% endif %}
+
 {% endblock %}
- <script>
-    const disponibles = {{ materiels_disponibles }};
-    const empruntes = {{ materiels_en_pret }};
-    const en_maintenance = {{ materiels_en_maintenance }};
-  </script>
-  <script>
-    new Chart(
-        document.getElementById('stats_parcInformatique'),
-        {
-            type: 'doughnut',
-            data: {
-                labels: [
-                    'Disponible',
-                    'Emprunté',
-                    'Hors service'
-                ],
-                datasets: [{
-                    data: [
-                        disponibles,
-                        empruntes,
-                        en_maintenance
-                    ]
-                }]
-            }
-        }
-    );
-    </script>

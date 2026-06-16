@@ -1,34 +1,35 @@
 <!doctype html>
 <html lang="fr">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{% block title %}Gestion Equipement{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              greenBrand: {
-                50: "#ecfdf3",
-                100: "#d1fae5",
-                500: "#15803d",
-                600: "#166534",
-                700: "#14532d",
-                800: "#123524",
-              },
-              darkPanel: "#0f2a1f",
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Gestion Equipement{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            greenBrand: {
+              50: "#ecfdf3",
+              100: "#d1fae5",
+              500: "#15803d",
+              600: "#166534",
+              700: "#14532d",
+              800: "#123524",
             },
-            boxShadow: {
-              soft: "0 4px 18px rgba(15, 42, 31, 0.10)",
-            },
+            darkPanel: "#0f2a1f",
+          },
+          boxShadow: {
+            soft: "0 4px 18px rgba(15, 42, 31, 0.10)",
           },
         },
-      };
-    </script>
-    <style type="text/tailwindcss">
-      @layer components {
+      },
+    };
+  </script>
+  <style type="text/tailwindcss">
+    @layer components {
         .nav-link {
           @apply flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-emerald-100 transition hover:bg-white/10 hover:text-white;
         }
@@ -46,100 +47,196 @@
         }
       }
     </style>
-  </head>
-  <body class="bg-slate-100 text-slate-800">
-    <div class="min-h-screen lg:flex">
-      <aside class="flex w-64 shrink-0 flex-col bg-darkPanel text-white lg:min-h-screen">
-        <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
-          <div class="grid h-9 w-9 place-items-center rounded-lg bg-greenBrand-600 shadow">
-            <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l9 4 9-4"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9 4 9-4"/>
-            </svg>
-          </div>
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-200">Gestionnaire</p>
-            <p class="text-sm font-bold leading-tight text-white">Gestion Equipement</p>
-          </div>
+</head>
+
+<body class="bg-slate-100 text-slate-800">
+  <div class="min-h-screen lg:flex">
+    <aside class="flex w-64 shrink-0 flex-col bg-darkPanel text-white lg:min-h-screen">
+      <div class="flex items-center gap-3 border-b border-white/10 px-5 py-5">
+        <div class="grid h-9 w-9 place-items-center rounded-lg bg-greenBrand-600 shadow">
+          <svg class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 7l9-4 9 4-9 4-9-4z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 17l9 4 9-4" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9 4 9-4" />
+          </svg>
         </div>
-
-        <nav class="flex-1 space-y-1 px-3 py-5">
-          <a href="?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7H10v7H4a1 1 0 0 1-1-1z"/></svg>
-            Tableau de bord
-          </a>
-          <a href="?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
-            Ajouter un equipement
-          </a>
-          <a href="?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Liste des equipements
-          </a>
-          <a href="?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6"/>
-            </svg>
-            Ajouter un emprunteur
-          </a>
-          <a href="?tab=emprunteur/liste" class="nav-link {% if tab == 'emprunteur/liste' %}active{% endif %}">
-                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Lister les emprunteurs
-          </a>
-          <a href="?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/></svg>
-            Enregistrer un emprunt
-          </a>
-          <a href="?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
-                   <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-            Lister des emprunts effectifs
-          </a>
-          <a href="?tab=rapports" class="nav-link {% if tab == 'rapports' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 13h8M8 17h5"/></svg>
-            Rapports
-          </a>
-          <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-            Import Excel
-          </a>
-      
-        </nav>
-
-        <div class="border-t border-white/10 px-3 py-4">
-          <a href="{% url 'users:logout' %}" class="nav-link text-red-300 hover:bg-red-900/30 hover:text-red-200">
-            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/></svg>
-            Deconnexion
-          </a>
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-widest text-emerald-200">Gestionnaire</p>
+          <p class="text-sm font-bold leading-tight text-white">Gestion Equipement</p>
         </div>
-      </aside>
+      </div>
 
-      <div class="flex flex-1 flex-col">
-        <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
-          <h1 class="text-xl font-bold text-greenBrand-700">{% block page_title %}Tableau de bord{% endblock %}</h1>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
-              <div class="grid h-7 w-7 place-items-center rounded-full bg-greenBrand-600 text-xs font-bold text-white">
-                {{ request.user.prenom|first|upper }}{{ request.user.nom|first|upper }}
-              </div>
-              <span class="text-sm font-medium text-slate-700">{{ request.user.prenom }} {{ request.user.nom }}</span>
-              <span class="rounded-full bg-greenBrand-100 px-2 py-0.5 text-xs font-semibold text-greenBrand-700">Gestionnaire</span>
-            </div>
-            <a href="{% url 'equipement:logout' %}" class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
-              <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9"/>
+      <nav class="flex-1 space-y-1 px-3 py-5">
+        <a href="?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7H10v7H4a1 1 0 0 1-1-1z" />
+          </svg>
+          Tableau de bord
+        </a>
+        <a href="?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          Ajouter un equipement
+        </a>
+        <a href="?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          Liste des equipements
+        </a>
+        <a href="?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="8.5" cy="7" r="4" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 8v6M23 11h-6" />
+          </svg>
+          Ajouter un emprunteur
+        </a>
+        <a href="?tab=emprunteur/liste" class="nav-link {% if tab == 'emprunteur/liste' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          Lister les emprunteurs
+        </a>
+        <a href="?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
+          </svg>
+          Enregistrer un emprunt
+        </a>
+        <a href="?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
+          </svg>
+          Lister des emprunts effectifs
+        </a>
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunts/retard"
+          class="nav-link {% if tab == 'emprunts/retard' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="8" x2="12" y2="12" />
+            <line x1="12" y1="16" x2="12.01" y2="16" />
+          </svg>
+          Emprunts en retard
+        </a>
+        <a href="{% url 'equipement:dashboard' %}?tab=rappels"
+          class="nav-link {% if tab == 'rappels' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 0 1-3.46 0" />
+          </svg>
+          Historique rappels
+        </a>
+        <a href="?tab=rapports" class="nav-link {% if tab == 'rapports' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 13h8M8 17h5" />
+          </svg>
+          Rapports
+        </a>
+        <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="17 8 12 3 7 8" />
+            <line x1="12" y1="3" x2="12" y2="15" />
+          </svg>
+          Import Excel
+        </a>
+      </nav>
+
+      <div class="border-t border-white/10 px-3 py-4">
+        <a href="{% url 'users:logout' %}" class="nav-link text-red-300 hover:bg-red-900/30 hover:text-red-200">
+          <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9" />
+          </svg>
+          Deconnexion
+        </a>
+      </div>
+    </aside>
+
+    <div class="flex flex-1 flex-col">
+      <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3 shadow-sm">
+        <h1 class="text-xl font-bold text-greenBrand-700">{% block page_title %}Tableau de bord{% endblock %}</h1>
+        <div class="flex items-center gap-3">
+
+          <!-- Cloche notifications -->
+          <div class="relative">
+            <a href="{% url 'equipement:overdue_emprunts' %}"
+              class="relative rounded-lg border border-slate-200 p-2 hover:bg-slate-100 cursor-pointer flex items-center">
+              <svg class="h-5 w-5 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.73 21a2 2 0 0 1-3.46 0" />
               </svg>
-              Déconnexion
+              <span id="notif-badge"
+                class="absolute -right-1 -top-1 hidden h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white"></span>
             </a>
           </div>
-        </header>
 
-        <main class="flex-1 p-6">
-          {% block content %}{% endblock %}
-        </main>
-      </div>
+          <div class="flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5">
+            <div class="grid h-7 w-7 place-items-center rounded-full bg-greenBrand-600 text-xs font-bold text-white">
+              {{ request.user.prenom|first|upper }}{{ request.user.nom|first|upper }}
+            </div>
+            <span class="text-sm font-medium text-slate-700">{{ request.user.prenom }} {{ request.user.nom }}</span>
+            <span
+              class="rounded-full bg-greenBrand-100 px-2 py-0.5 text-xs font-semibold text-greenBrand-700">Gestionnaire</span>
+          </div>
+          <a href="{% url 'equipement:logout' %}"
+            class="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition hover:bg-slate-100">
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m16 17 5-5-5-5M21 12H9" />
+            </svg>
+            Déconnexion
+          </a>
+        </div>
+      </header>
+
+      <main class="flex-1 p-6">
+        {% block content %}{% endblock %}
+      </main>
     </div>
-  </body>
+  </div>
+
+  <script>
+    function fetchNotifications() {
+      fetch("{% url 'equipement:notifications_api' %}")
+        .then(r => r.json())
+        .then(data => {
+          const badge = document.getElementById("notif-badge");
+          if (data.count > 0) {
+            badge.textContent = data.count;
+            badge.classList.remove("hidden");
+            badge.classList.add("flex");
+          } else {
+            badge.classList.add("hidden");
+            badge.classList.remove("flex");
+          }
+        })
+        .catch(() => { });
+    }
+    fetchNotifications();
+    setInterval(fetchNotifications, 60000);
+  </script>
+</body>
+
 </html>
