@@ -95,6 +95,9 @@ def retirer_materiel(request, materiel_id):
         messages.error(request, "Action non autorisee.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     materiel = get_object_or_404(Materiel, id_materiel=materiel_id)
+    if materiel.est_en_pret():
+        messages.error(request, f"Impossible de supprimer \"{materiel.nom}\" : cet equipement est actuellement en pret.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     nom = materiel.nom
     materiel.delete()
     messages.success(request, f"Equipement {nom} retire avec succes.")
@@ -449,7 +452,8 @@ def import_emprunts(request):
         return redirect(f"{reverse('equipement:dashboard')}?tab={TAB_RETOUR}")
     importes = mis_a_jour = ignores = 0
     erreurs = []
-    statuts_valides = [c[0] for c in Emprunt.Statut.choices]
+
+    statuts_valides = [c[0] for c in Emprunt.Statut.choices] 
     today = timezone.localdate()
 
     def _parse_date(valeur):
