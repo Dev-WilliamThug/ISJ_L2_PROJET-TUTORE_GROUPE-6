@@ -95,6 +95,9 @@ def retirer_materiel(request, materiel_id):
         messages.error(request, "Action non autorisee.")
         return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     materiel = get_object_or_404(Materiel, id_materiel=materiel_id)
+    if materiel.est_en_pret():
+        messages.error(request, f"Impossible de supprimer \"{materiel.nom}\" : cet equipement est actuellement en pret.")
+        return redirect(f"{reverse('equipement:dashboard')}?tab=equipement/liste")
     nom = materiel.nom
     materiel.delete()
     messages.success(request, f"Equipement {nom} retire avec succes.")
