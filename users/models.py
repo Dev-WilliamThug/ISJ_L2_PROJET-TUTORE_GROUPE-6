@@ -2,8 +2,7 @@ from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from equipement.models import Materiel,Tierce,Operation,Emprunt,Classe 
-
+from equipement.models import Materiel, Tierce, Operation, Emprunt, Classe
 
 
 class CustomUserManager(BaseUserManager):
@@ -23,18 +22,15 @@ class CustomUserManager(BaseUserManager):
         if password:
             user.set_password(password)
         else:
-            # Un mot de passe vide ne doit pas arriver en prod.
             user.set_unusable_password()
 
         user.save(using=self._db)
         return user
 
     def create_superuser(self, email, nom, prenom, password=None, **extra_fields):
-        extra_fields.setdefault("type_user", "administrateur")
-        extra_fields["is_staff"] = True      # ← ajouter
+        extra_fields["is_staff"] = True
+        extra_fields["is_superuser"] = True
         return self.create_user(email, nom, prenom, type_user="administrateur", password=password, **extra_fields)
-    
-    
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
@@ -47,6 +43,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     prenom = models.CharField(max_length=150)
     type_user = models.CharField(max_length=30, choices=TypeUser.choices, default=TypeUser.MANAGER)
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
@@ -60,5 +57,3 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         if self.email:
             self.email = self.email.lower()
         super().save(*args, **kwargs)
-
-

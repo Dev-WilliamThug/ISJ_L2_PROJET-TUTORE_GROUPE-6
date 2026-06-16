@@ -1,5 +1,4 @@
 from django.urls import path
-
 from . import views
 
 app_name = "equipement"
@@ -20,4 +19,9 @@ urlpatterns = [
     path("emprunteur/<str:emprunteur_id>/retirer/", views.retirer_emprunteur, name="retirer_emprunteur"),
     path("emprunt/enregistrer/", views.enregistrer_emprunt_view, name="enregistrer_emprunt"),
     path("emprunts/template/", views.exporter_template_emprunts, name="exporter_template_emprunts"),
+    path("emprunts/en-retard/", views.overdue_emprunts, name="overdue_emprunts"),
+    path("emprunts/<int:emprunt_id>/rendu/", views.marquer_rendu, name="marquer_rendu"),
+    path("rappels/", views.rappels_list, name="rappels_list"),
+    path("rappels/envoyer/", views.send_reminders_manual, name="send_reminders_manual"),
+    path("notifications/api/", views.notifications_api, name="notifications_api"),
 ]

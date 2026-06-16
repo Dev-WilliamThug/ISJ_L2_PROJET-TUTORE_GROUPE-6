@@ -25,19 +25,15 @@ from equipement.analytics import get_admin_chart_data
 
 
 def _generate_password(length: int = 12) -> str:
-    alphabet = string.ascii_letters + string.digits 
+    alphabet = string.ascii_letters + string.digits
     while True:
         pwd = "".join(secrets.choice(alphabet) for _ in range(length))
         if (
             any(c.isupper() for c in pwd)
             and any(c.islower() for c in pwd)
             and any(c.isdigit() for c in pwd)
-        
         ):
             return pwd
-
-
-
 
 
 def admin_required(view_func):
@@ -49,13 +45,13 @@ def admin_required(view_func):
     return _wrapped
 
 
-
 def login_view(request: HttpRequest) -> HttpResponse:
     if request.user.is_authenticated:
         if request.user.type_user == CustomUser.TypeUser.ADMIN:
             return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
         elif request.user.type_user == CustomUser.TypeUser.MANAGER:
             return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
+
     form = LoginForm(request.POST or None)
     if request.method == "POST":
         if form.is_valid():
@@ -71,12 +67,12 @@ def login_view(request: HttpRequest) -> HttpResponse:
                 messages.error(request, "Identifiants incorrects.")
             else:
                 login(request, user)
-            if request.user.type_user == CustomUser.TypeUser.ADMIN:
-                return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
-            elif request.user.type_user == CustomUser.TypeUser.MANAGER:
-                return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
-    return render(request, "users/login.html", {"form": form})
+                if user.type_user == CustomUser.TypeUser.ADMIN:
+                    return redirect(f"{reverse('users:dashboard')}?tab=dashboard")
+                elif user.type_user == CustomUser.TypeUser.MANAGER:
+                    return redirect(f"{reverse('equipement:dashboard')}?tab=dashboard")
 
+    return render(request, "users/login.html", {"form": form})
 
 
 def logout_view(request: HttpRequest) -> HttpResponse:
@@ -85,11 +81,9 @@ def logout_view(request: HttpRequest) -> HttpResponse:
     return redirect("users:login")
 
 
-
 @login_required
 @admin_required
 def dashboard(request: HttpRequest) -> HttpResponse:
-
     tab = request.GET.get("tab", "home")
     active_users = CustomUser.objects.filter(is_active=True).order_by("id")
     disabled_users = CustomUser.objects.filter(is_active=False).order_by("id")
@@ -110,15 +104,12 @@ def dashboard(request: HttpRequest) -> HttpResponse:
             form = RegisterUserForm(request.POST)
             if form.is_valid():
                 try:
-                    # 1. Sauvegarder l'utilisateur dans une transaction isolée
                     with transaction.atomic():
                         user = form.save(commit=False)
                         plain_password = _generate_password()
                         user.set_password(plain_password)
                         user.save()
 
-                    # 2. Envoyer le mail HORS de la transaction
-                    #    → fail_silently=False pour capturer les vraies erreurs SMTP
                     email_dest = user.email
                     prenom     = user.prenom
                     nom        = user.nom
@@ -137,7 +128,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
                         ),
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[email_dest],
-                        fail_silently=False,  # ← lève une exception si le mail échoue
+                        fail_silently=False,
                     )
 
                     messages.success(
@@ -182,14 +173,9 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     return render(request, "users/dashboard.html", context)
 
 
-
 @login_required
 @admin_required
 def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
-    """
-    Permet de modifier les informations d'un utilisateur (nom, prénom, email, type).
-    Le mot de passe n'est PAS modifié ici.
-    """
     target = get_object_or_404(CustomUser, pk=user_id)
 
     if request.method == "POST":
@@ -207,7 +193,6 @@ def edit_user(request: HttpRequest, user_id: int) -> HttpResponse:
         form = EditUserForm(instance=target)
 
     return render(request, "users/edit_user.html", {"form": form, "target": target})
-
 
 
 @require_POST
@@ -228,7 +213,6 @@ def deactivate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/desactives")
 
 
-
 @require_POST
 @login_required
 @admin_required
@@ -242,16 +226,16 @@ def activate_user(request: HttpRequest, user_id: int) -> HttpResponse:
     messages.success(request, "Utilisateur activé.")
     return redirect(f"{reverse('users:dashboard')}?tab=utilisateur/actifs")
 
- 
-def validate_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+
+def validate_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
     emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
     emprunt.statut = Emprunt.Statut.APPROUVE
     emprunt.save(update_fields=["statut"])
     messages.success(request, "Emprunt validé.")
     return redirect(f"{reverse('users:dashboard')}?tab=emprunts")
- 
 
-def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
+
+def refuser_emprunt(request: HttpRequest, emprunt_id: int) -> HttpResponse:
     emprunt = get_object_or_404(Emprunt, pk=emprunt_id)
     emprunt.statut = Emprunt.Statut.REFUSE
     emprunt.save(update_fields=["statut"])
@@ -259,14 +243,9 @@ def refuser_emprunt(request:HttpRequest, emprunt_id:int)->HttpResponse:
     return redirect(f"{reverse('users:dashboard')}?tab=emprunts")
 
 
-# ══════════════════════════════════════════════════════════
-#  CRUD CLASSES
-# ══════════════════════════════════════════════════════════
-
 @login_required
 @admin_required
 def edit_classe(request: HttpRequest, classe_id: int) -> HttpResponse:
-    """Modification d'une classe existante."""
     classe = get_object_or_404(Classe, pk=classe_id)
 
     if request.method == "POST":
@@ -289,14 +268,8 @@ def edit_classe(request: HttpRequest, classe_id: int) -> HttpResponse:
 @login_required
 @admin_required
 def delete_classe(request: HttpRequest, classe_id: int) -> HttpResponse:
-    """
-    Suppression d'une classe.
-    Règle métier : impossible de supprimer une classe liée à des emprunteurs (Tierce)
-    ou à des inventaires actifs.
-    """
     classe = get_object_or_404(Classe, pk=classe_id)
 
-    # Vérification des dépendances
     nb_emprunteurs = classe.tierce_set.count() if hasattr(classe, "tierce_set") else 0
     nb_inventaires = classe.inventaire_set.count() if hasattr(classe, "inventaire_set") else 0
 
