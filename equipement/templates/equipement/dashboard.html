@@ -89,18 +89,18 @@
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des equipements</h2>
         <div class="flex gap-2">
-          <a href="?tab=equipement/ajouter" class="btn-primary">Ajouter</a>
+          <a href="{% url 'equipement:dashboard' %}?tab=equipement/ajouter" class="btn-primary">Ajouter</a>
           <a href="{% url 'equipement:exporter_excel' %}" class="btn-secondary">Exporter</a>
         </div>
       </div>
       <div class="border-b border-slate-100 px-6 py-3 flex flex-wrap gap-2 items-center">
         <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Filtrer :</span>
-        <a href="?tab=equipement/liste" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+        <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
           {% if not categorie_filtre %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
           Tout
         </a>
         {% for valeur, label in categories %}
-          <a href="?tab=equipement/liste&categorie={{ valeur }}" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
+          <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste&categorie={{ valeur }}" class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition
             {% if categorie_filtre == valeur %}bg-greenBrand-600 text-white{% else %}bg-slate-100 text-slate-600 hover:bg-slate-200{% endif %}">
             {{ label }}
           </a>
@@ -150,13 +150,13 @@
     <section class="space-y-6">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-bold text-slate-800">Equipements par catégorie</h2>
-        <a href="?tab=equipement/liste" class="btn-secondary">Vue liste</a>
+        <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste" class="btn-secondary">Vue liste</a>
       </div>
       {% for valeur, label in categories %}
         <div class="rounded-xl border border-slate-200 bg-white shadow-soft overflow-hidden">
           <div class="flex items-center justify-between bg-slate-50 border-b border-slate-100 px-6 py-3">
             <h3 class="font-semibold text-slate-700">{{ label }}</h3>
-            <a href="?tab=equipement/liste&categorie={{ valeur }}" class="text-xs text-greenBrand-600 font-semibold hover:underline">Voir tout →</a>
+            <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste&categorie={{ valeur }}" class="text-xs text-greenBrand-600 font-semibold hover:underline">Voir tout →</a>
           </div>
           <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-100">
@@ -230,7 +230,7 @@
     <section class="rounded-xl border border-slate-200 bg-white shadow-soft">
       <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
         <h2 class="text-lg font-bold text-slate-800">Liste des emprunteurs</h2>
-        <a href="?tab=emprunteur/ajouter" class="btn-primary">Ajouter</a>
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunteur/ajouter" class="btn-primary">Ajouter</a>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
@@ -293,6 +293,18 @@
 
   {% if tab == 'emprunts/creer' %}
     <section class="mx-auto max-w-3xl rounded-xl border border-slate-200 bg-white p-6 shadow-soft">
+            {% if messages %}
+              <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                  <div class="rounded-lg border px-4 py-3 text-sm font-medium
+                    {% if message.tags == 'success' %}border-green-200 bg-green-50 text-green-700
+                    {% elif message.tags == 'error' %}border-red-200 bg-red-50 text-red-700
+                    {% else %}border-amber-200 bg-amber-50 text-amber-700{% endif %}">
+                    {{ message }}
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
       <h2 class="mb-4 text-lg font-bold text-slate-800">Créer un emprunt</h2>
       <form class="space-y-5" method="post" action="{% url 'equipement:enregistrer_emprunt' %}">
         {% csrf_token %}
@@ -373,9 +385,9 @@
         </div>
       {% endif %}
       <div class="flex gap-2 px-6 py-4 border-b border-slate-100">
-        <a href="?tab=emprunts/creer" class="btn-primary">Ajouter</a>
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunts/creer" class="btn-primary">Ajouter</a>
         <a href="{% url 'equipement:exporter_template_emprunts' %}" class="btn-secondary">Exporter</a>
-        <a href="?tab=import" class="btn-secondary">Importer</a>
+        <a href="{% url 'equipement:dashboard' %}?tab=import" class="btn-secondary">Importer</a>
       </div>
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-slate-100">
@@ -502,7 +514,8 @@
     </section>
   {% endif %}
 
-  
+  {% if tab == 'rappels' %}
+    <section class="rounded-xl border border-slate-200 bg-white shadow-soft p-6">
       {% if messages %}
         <div class="mb-4 space-y-2">
           {% for message in messages %}
@@ -532,7 +545,7 @@
           </select>
         </div>
         <button type="submit" class="btn-primary">Filtrer</button>
-        <a href="?tab=rappels" class="btn-secondary">Réinitialiser</a>
+        <a href="{% url 'equipement:dashboard' %}?tab=rappels" class="btn-secondary">Réinitialiser</a>
       </form>
       {% if rappels %}
         <div class="overflow-x-auto">

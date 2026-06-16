@@ -67,20 +67,20 @@
       </div>
 
       <nav class="flex-1 space-y-1 px-3 py-5">
-        <a href="?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=dashboard" class="nav-link {% if tab == 'dashboard' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-6v-7H10v7H4a1 1 0 0 1-1-1z" />
           </svg>
           Tableau de bord
         </a>
-        <a href="?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=equipement/ajouter" class="nav-link {% if tab == 'equipement/ajouter' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
           </svg>
           Ajouter un equipement
         </a>
-        <a href="?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=equipement/liste" class="nav-link {% if tab == 'equipement/liste' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="8" y1="6" x2="21" y2="6" />
             <line x1="8" y1="12" x2="21" y2="12" />
@@ -91,7 +91,7 @@
           </svg>
           Liste des equipements
         </a>
-        <a href="?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunteur/ajouter" class="nav-link {% if tab == 'emprunteur/ajouter' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
             <circle cx="8.5" cy="7" r="4" />
@@ -99,7 +99,7 @@
           </svg>
           Ajouter un emprunteur
         </a>
-        <a href="?tab=emprunteur/liste" class="nav-link {% if tab == 'emprunteur/liste' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunteur/liste" class="nav-link {% if tab == 'emprunteur/liste' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="8" y1="6" x2="21" y2="6" />
             <line x1="8" y1="12" x2="21" y2="12" />
@@ -110,13 +110,13 @@
           </svg>
           Lister les emprunteurs
         </a>
-        <a href="?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunts/creer" class="nav-link {% if tab == 'emprunts/creer' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14" />
           </svg>
           Enregistrer un emprunt
         </a>
-        <a href="?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=emprunts/liste" class="nav-link {% if tab == 'emprunts/liste' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="8" y1="6" x2="21" y2="6" />
             <line x1="8" y1="12" x2="21" y2="12" />
@@ -137,7 +137,7 @@
           Emprunts en retard
         </a>
        
-        <a href="?tab=rapports" class="nav-link {% if tab == 'rapports' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=rapports" class="nav-link {% if tab == 'rapports' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round"
               d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -146,7 +146,7 @@
           </svg>
           Rapports
         </a>
-        <a href="?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
+        <a href="{% url 'equipement:dashboard' %}?tab=import" class="nav-link {% if tab == 'import' %}active{% endif %}">
           <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
             <polyline points="17 8 12 3 7 8" />
